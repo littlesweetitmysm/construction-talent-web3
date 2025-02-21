@@ -1,5 +1,6 @@
 import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react';
 import Head from 'next/head';
+import Web3Connection from '../components/Web3Connection';
 
 export default function Home() {
   return (
@@ -16,9 +17,10 @@ export default function Home() {
             <Heading as="h1" size="2xl" mb={4}>
               Construction Talent Web3
             </Heading>
-            <Text fontSize="xl" color="gray.600">
+            <Text fontSize="xl" color="gray.600" mb={8}>
               Decentralized platform for managing construction industry talents
             </Text>
+            <Web3Connection />
           </Box>
 
           <Box p={8} borderWidth={1} borderRadius="lg" boxShadow="lg">
