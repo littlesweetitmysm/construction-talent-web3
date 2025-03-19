@@ -34,7 +34,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
     event TalentVerified(address indexed talent);
     event ProjectAssigned(uint256 indexed projectId, address indexed talent);
 
-    constructor() Ownable(msg.sender) {}
+    constructor() {}
 
     function registerTalent(
         string memory _name,
