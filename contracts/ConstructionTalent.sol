@@ -69,7 +69,8 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
         require(_deadline > block.timestamp, "Deadline must be in the future");
 
         projectCount++;
-        projects[projectCount] = Project({
+        uint256 currentProjectId = projectCount;
+        projects[currentProjectId] = Project({
             title: _title,
             description: _description,
             budget: _budget,
@@ -79,7 +80,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
             deadline: _deadline
         });
 
-        emit ProjectCreated(projectCount, _title);
+        emit ProjectCreated(currentProjectId, _title);
     }
 
     function verifyTalent(address _talent) external onlyOwner {
