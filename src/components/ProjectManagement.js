@@ -55,28 +55,34 @@ const ProjectManagement = ({ provider, address }) => {
           provider
         );
 
-        const count = await contract.projectCount();
-        const projectPromises = [];
-
-        for (let i = 0; i < count; i++) {
-          projectPromises.push(contract.getProjectInfo(i));
+        setLoading(true);
+        const projectCount = await contract.projectCount();
+        const projects = [];
+        
+        for (let i = 1; i <= projectCount; i++) {
+          try {
+            const project = await contract.getProjectInfo(i);
+            projects.push({
+              id: i,
+              title: project.title,
+              description: project.description,
+              budget: project.budget.toString(),
+              status: project.status,
+              talent: project.talent,
+            });
+          } catch (error) {
+            console.error(`Error fetching project ${i}:`, error);
+            // Continue with next project instead of failing completely
+            continue;
+          }
         }
-
-        const projectData = await Promise.all(projectPromises);
-        setProjects(projectData.map((data, index) => ({
-          id: index,
-          title: data.title,
-          description: data.description,
-          budget: ethers.utils.formatEther(data.budget),
-          client: data.client,
-          isActive: data.isActive,
-          deadline: new Date(data.deadline.toNumber() * 1000).toLocaleDateString(),
-        })));
+        
+        setProjects(projects);
       } catch (error) {
         console.error('Error fetching projects:', error);
         toast({
           title: 'Error',
-          description: 'Failed to fetch projects.',
+          description: 'Failed to fetch projects. Please try again.',
           status: 'error',
           duration: 5000,
           isClosable: true,
