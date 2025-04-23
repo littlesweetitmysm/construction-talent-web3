@@ -1,43 +1,35 @@
-import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react';
-import Head from 'next/head';
-import Web3Connection from '../components/Web3Connection';
+import { Box, Container, VStack, Button, HStack } from '@chakra-ui/react';
+import Navigation from '../components/Navigation';
+import Logo from '../components/Logo';
+import { useRouter } from 'next/router';
 
 export default function Home() {
+  const router = useRouter();
+
   return (
-    <>
-      <Head>
-        <title>Construction Talent Web3</title>
-        <meta name="description" content="Decentralized construction talent management platform" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <Container maxW="container.xl" py={10}>
-        <VStack spacing={8} align="stretch">
-          <Box textAlign="center">
-            <Heading as="h1" size="2xl" mb={4}>
-              Construction Talent Web3
-            </Heading>
-            <Text fontSize="xl" color="gray.600" mb={8}>
-              Decentralized platform for managing construction industry talents
-            </Text>
-            <Web3Connection />
-          </Box>
-
-          <Box p={8} borderWidth={1} borderRadius="lg" boxShadow="lg">
-            <Heading as="h2" size="lg" mb={4}>
-              Welcome to the Future of Construction Talent Management
-            </Heading>
-            <Text fontSize="md" mb={4}>
-              Our platform leverages blockchain technology to create a transparent and efficient
-              ecosystem for construction professionals and project owners.
-            </Text>
-            <Text fontSize="md">
-              Connect your wallet to get started and explore the possibilities of Web3-powered
-              talent management.
-            </Text>
-          </Box>
+    <Box minH="100vh">
+      <Navigation />
+      <Container maxW="container.lg" pt={32}>
+        <VStack spacing={8} align="center" justify="center" minH="70vh">
+          <Logo size="xl" />
+          <HStack spacing={4} mt={8}>
+            <Button
+              size="lg"
+              variant="solid"
+              onClick={() => router.push('/dashboard')}
+            >
+              Explore Projects
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => router.push('/register')}
+            >
+              Register as Talent
+            </Button>
+          </HStack>
         </VStack>
       </Container>
-    </>
+    </Box>
   );
 } 
