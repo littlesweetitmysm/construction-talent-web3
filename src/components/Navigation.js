@@ -6,6 +6,7 @@ const Navigation = ({ account }) => {
   const router = useRouter();
 
   const shortenAddress = (address) => {
+    if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
@@ -49,17 +50,19 @@ const Navigation = ({ account }) => {
           >
             Projects
           </Button>
-          <Box
-            bg="whiteAlpha.200"
-            px={4}
-            py={2}
-            borderRadius="full"
-            border="1px solid rgba(255, 255, 255, 0.2)"
-          >
-            <Text color="white" fontSize="sm">
-              {shortenAddress(account)}
-            </Text>
-          </Box>
+          {account && (
+            <Box
+              bg="whiteAlpha.200"
+              px={4}
+              py={2}
+              borderRadius="full"
+              border="1px solid rgba(255, 255, 255, 0.2)"
+            >
+              <Text color="white" fontSize="sm">
+                {shortenAddress(account)}
+              </Text>
+            </Box>
+          )}
         </HStack>
       </Flex>
     </Box>
