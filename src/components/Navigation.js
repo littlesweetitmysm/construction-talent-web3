@@ -1,8 +1,13 @@
-import { Box, Flex, Button, Image, HStack } from '@chakra-ui/react';
+import { Box, Flex, Button, Image, HStack, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
+import Logo from './Logo';
 
-const Navigation = () => {
+const Navigation = ({ account }) => {
   const router = useRouter();
+
+  const shortenAddress = (address) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
   return (
     <Box
@@ -11,9 +16,9 @@ const Navigation = () => {
       left={0}
       right={0}
       zIndex={10}
-      bg="rgba(255, 255, 255, 0.1)"
+      bg="rgba(0, 0, 0, 0.2)"
       backdropFilter="blur(10px)"
-      borderBottom="1px solid rgba(255, 255, 255, 0.2)"
+      borderBottom="1px solid rgba(255, 255, 255, 0.1)"
       py={4}
     >
       <Flex
@@ -24,22 +29,37 @@ const Navigation = () => {
         justify="space-between"
       >
         <Box cursor="pointer" onClick={() => router.push('/')}>
-          <Image src="/logo.png" alt="Construction Talent Web3" h="40px" />
+          <Logo size="sm" />
         </Box>
 
-        <HStack spacing={4}>
+        <HStack spacing={6}>
           <Button
-            variant="outline"
+            variant="ghost"
+            color="white"
+            _hover={{ bg: 'whiteAlpha.200' }}
             onClick={() => router.push('/dashboard')}
           >
             Dashboard
           </Button>
           <Button
-            variant="solid"
-            onClick={() => router.push('/connect')}
+            variant="ghost"
+            color="white"
+            _hover={{ bg: 'whiteAlpha.200' }}
+            onClick={() => router.push('/projects')}
           >
-            Connect Wallet
+            Projects
           </Button>
+          <Box
+            bg="whiteAlpha.200"
+            px={4}
+            py={2}
+            borderRadius="full"
+            border="1px solid rgba(255, 255, 255, 0.2)"
+          >
+            <Text color="white" fontSize="sm">
+              {shortenAddress(account)}
+            </Text>
+          </Box>
         </HStack>
       </Flex>
     </Box>

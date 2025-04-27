@@ -1,31 +1,76 @@
 import { useState } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
+  Box,
+  VStack,
   FormControl,
   FormLabel,
   Input,
   Textarea,
-  VStack,
+  Button,
   useToast,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from '@chakra-ui/react';
-import { registerTalent } from '../utils/contract';
+import { ethers } from 'ethers';
+import ConstructionTalent from '../contracts/ConstructionTalent.json';
 
-const TalentRegistration = ({ isOpen, onClose, signer }) => {
+const TalentRegistration = ({ provider, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     skills: '',
-    experience: '',
-    certifications: '',
+    experience: 0,
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const toast = useToast();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const signer = provider.getSigner();
+      const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+      const contract = new ethers.Contract(
+        contractAddress,
+        ConstructionTalent.abi,
+        signer
+      );
+
+      const tx = await contract.registerTalent(
+        formData.name,
+        formData.skills,
+        formData.experience
+      );
+
+      await tx.wait();
+
+      toast({
+        title: 'Registration Successful',
+        description: 'Your talent profile has been created.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error registering talent:', error);
+      toast({
+        title: 'Registration Failed',
+        description: error.message || 'Failed to register talent profile.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,118 +80,58 @@ const TalentRegistration = ({ isOpen, onClose, signer }) => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const tx = await registerTalent(
-        signer,
-        formData.name,
-        formData.skills,
-        parseInt(formData.experience),
-        formData.certifications
-      );
-      await tx.wait();
-
-      toast({
-        title: 'Success',
-        description: 'Talent registration successful!',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-
-      onClose();
-      setFormData({
-        name: '',
-        skills: '',
-        experience: '',
-        certifications: '',
-      });
-    } catch (error) {
-      console.error('Error registering talent:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to register talent. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Register as Talent</ModalHeader>
-        <ModalCloseButton />
-        <form onSubmit={handleSubmit}>
-          <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Full Name</FormLabel>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                />
-              </FormControl>
+    <Box p={4} borderWidth={1} borderRadius="lg" boxShadow="sm">
+      <form onSubmit={handleSubmit}>
+        <VStack spacing={4} align="stretch">
+          <FormControl isRequired>
+            <FormLabel>Name</FormLabel>
+            <Input
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+            />
+          </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>Skills</FormLabel>
-                <Textarea
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleChange}
-                  placeholder="Enter your skills (comma-separated)"
-                />
-              </FormControl>
+          <FormControl isRequired>
+            <FormLabel>Skills</FormLabel>
+            <Textarea
+              name="skills"
+              value={formData.skills}
+              onChange={handleChange}
+              placeholder="Enter your skills (e.g., Carpentry, Electrical, Plumbing)"
+            />
+          </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>Years of Experience</FormLabel>
-                <Input
-                  name="experience"
-                  type="number"
-                  value={formData.experience}
-                  onChange={handleChange}
-                  placeholder="Enter years of experience"
-                  min="0"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Certifications</FormLabel>
-                <Textarea
-                  name="certifications"
-                  value={formData.certifications}
-                  onChange={handleChange}
-                  placeholder="Enter your certifications (comma-separated)"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              type="submit"
-              isLoading={isLoading}
-              loadingText="Registering..."
+          <FormControl isRequired>
+            <FormLabel>Years of Experience</FormLabel>
+            <NumberInput
+              min={0}
+              value={formData.experience}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, experience: value }))
+              }
             >
-              Register
-            </Button>
-          </ModalFooter>
-        </form>
-      </ModalContent>
-    </Modal>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+
+          <Button
+            type="submit"
+            colorScheme="blue"
+            isLoading={loading}
+            loadingText="Registering..."
+          >
+            Register as Talent
+          </Button>
+        </VStack>
+      </form>
+    </Box>
   );
 };
 

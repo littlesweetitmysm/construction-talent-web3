@@ -1,26 +1,18 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { Global, css } from '@emotion/react';
 
-const GlobalStyles = () => (
-  <Global
-    styles={css`
-      body {
-        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)),
-          url('/cityscape.jpg') no-repeat center center fixed;
-        background-size: cover;
-        min-height: 100vh;
-      }
-    `}
-  />
-);
-
 const theme = extendTheme({
   styles: {
     global: {
       body: {
+        bg: '#000',
         color: 'white',
       },
     },
+  },
+  config: {
+    initialColorMode: 'dark',
+    useSystemColorMode: false,
   },
   components: {
     Button: {
@@ -68,10 +60,27 @@ const theme = extendTheme({
   },
 });
 
+const GlobalStyles = css`
+  body {
+    min-height: 100vh;
+    background: linear-gradient(
+      rgba(0, 0, 0, 0.7),
+      rgba(0, 0, 0, 0.9)
+    ),
+    url('/images/cityscape-bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+  }
+
+  #__next {
+    min-height: 100vh;
+  }
+`;
+
 function MyApp({ Component, pageProps }) {
   return (
     <ChakraProvider theme={theme}>
-      <GlobalStyles />
+      <Global styles={GlobalStyles} />
       <Component {...pageProps} />
     </ChakraProvider>
   );
