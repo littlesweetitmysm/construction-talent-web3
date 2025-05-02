@@ -3,10 +3,10 @@ import { Box, Text, HStack } from '@chakra-ui/react';
 const Logo = ({ size = 'xl' }) => {
   const isLarge = size === 'xl';
   return (
-    <HStack spacing={4} align="center">
+    <HStack spacing={isLarge ? 8 : 4} align="center">
       <Box
-        w={isLarge ? '80px' : '40px'}
-        h={isLarge ? '80px' : '40px'}
+        w={isLarge ? '160px' : '40px'}
+        h={isLarge ? '160px' : '40px'}
         borderRadius="full"
         position="relative"
         overflow="hidden"
@@ -23,33 +23,33 @@ const Logo = ({ size = 'xl' }) => {
         display="flex"
         alignItems="center"
         justifyContent="center"
-        boxShadow="0 0 40px rgba(66, 153, 225, 0.4)"
+        boxShadow="0 0 60px rgba(66, 153, 225, 0.5)"
         _before={{
           content: '""',
           position: 'absolute',
-          top: '2px',
-          right: '2px',
-          bottom: '2px',
-          left: '2px',
+          top: '4px',
+          right: '4px',
+          bottom: '4px',
+          left: '4px',
           borderRadius: 'full',
           background: 'rgba(0, 0, 0, 0.2)',
-          backdropFilter: 'blur(5px)',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <Text
-          fontSize={isLarge ? '4xl' : '2xl'}
+          fontSize={isLarge ? '6xl' : '2xl'}
           fontWeight="bold"
           color="white"
           position="relative"
           zIndex={1}
-          textShadow="2px 2px 4px rgba(0, 0, 0, 0.3)"
+          textShadow="3px 3px 6px rgba(0, 0, 0, 0.4)"
         >
           CT
         </Text>
       </Box>
       <Box>
         <Text
-          fontSize={isLarge ? '3xl' : 'xl'}
+          fontSize={isLarge ? '5xl' : 'xl'}
           fontWeight="bold"
           bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
           bgClip="text"
@@ -59,10 +59,10 @@ const Logo = ({ size = 'xl' }) => {
           Construction
         </Text>
         <Text
-          fontSize={isLarge ? '2xl' : 'lg'}
+          fontSize={isLarge ? '4xl' : 'lg'}
           fontWeight="bold"
           color="white"
-          textShadow="2px 2px 4px rgba(0, 0, 0, 0.2)"
+          textShadow="3px 3px 6px rgba(0, 0, 0, 0.3)"
           letterSpacing="wide"
           lineHeight="1"
         >
