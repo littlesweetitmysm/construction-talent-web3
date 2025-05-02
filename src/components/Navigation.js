@@ -1,8 +1,8 @@
-import { Box, Flex, Button, Image, HStack, Text } from '@chakra-ui/react';
+import { Box, Flex, Button, HStack, Text, useDisclosure } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Logo from './Logo';
 
-const Navigation = ({ account }) => {
+const Navigation = ({ account, onDisconnect }) => {
   const router = useRouter();
 
   const shortenAddress = (address) => {
@@ -33,35 +33,46 @@ const Navigation = ({ account }) => {
           <Logo size="sm" />
         </Box>
 
-        <HStack spacing={6}>
-          <Button
-            variant="ghost"
-            color="white"
-            _hover={{ bg: 'whiteAlpha.200' }}
-            onClick={() => router.push('/dashboard')}
-          >
-            Dashboard
-          </Button>
+        <HStack spacing={4}>
           <Button
             variant="ghost"
             color="white"
             _hover={{ bg: 'whiteAlpha.200' }}
             onClick={() => router.push('/projects')}
           >
-            Projects
+            View Projects
           </Button>
           {account && (
-            <Box
-              bg="whiteAlpha.200"
-              px={4}
-              py={2}
-              borderRadius="full"
-              border="1px solid rgba(255, 255, 255, 0.2)"
-            >
-              <Text color="white" fontSize="sm">
-                {shortenAddress(account)}
-              </Text>
-            </Box>
+            <>
+              <Button
+                variant="ghost"
+                color="white"
+                _hover={{ bg: 'whiteAlpha.200' }}
+                onClick={() => router.push('/profile')}
+              >
+                My Profile
+              </Button>
+              <Box
+                bg="whiteAlpha.200"
+                px={4}
+                py={2}
+                borderRadius="full"
+                border="1px solid rgba(255, 255, 255, 0.2)"
+              >
+                <Text color="white" fontSize="sm">
+                  {shortenAddress(account)}
+                </Text>
+              </Box>
+              <Button
+                variant="outline"
+                color="white"
+                borderColor="whiteAlpha.400"
+                _hover={{ bg: 'whiteAlpha.200' }}
+                onClick={onDisconnect}
+              >
+                Disconnect
+              </Button>
+            </>
           )}
         </HStack>
       </Flex>

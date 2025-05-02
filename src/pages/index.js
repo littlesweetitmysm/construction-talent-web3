@@ -1,4 +1,4 @@
-import { Box, Container, VStack, Button, HStack, useDisclosure } from '@chakra-ui/react';
+import { Box, Container, VStack, Button, HStack, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, FormControl, FormLabel, Input, Textarea, Select } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Navigation from '../components/Navigation';
@@ -9,6 +9,9 @@ export default function Home() {
   const router = useRouter();
   const [isConnected, setIsConnected] = useState(false);
   const [account, setAccount] = useState('');
+  
+  const { isOpen: isTalentModalOpen, onOpen: onTalentModalOpen, onClose: onTalentModalClose } = useDisclosure();
+  const { isOpen: isProjectModalOpen, onOpen: onProjectModalOpen, onClose: onProjectModalClose } = useDisclosure();
 
   const connectWallet = async () => {
     try {
@@ -26,8 +29,12 @@ export default function Home() {
     }
   };
 
+  const disconnectWallet = () => {
+    setAccount('');
+    setIsConnected(false);
+  };
+
   useEffect(() => {
-    // Check if wallet is already connected
     const checkConnection = async () => {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
@@ -42,7 +49,7 @@ export default function Home() {
 
   return (
     <Box minH="100vh" position="relative">
-      {isConnected && <Navigation account={account} />}
+      {isConnected && <Navigation account={account} onDisconnect={disconnectWallet} />}
       <Container maxW="container.lg" pt={isConnected ? 32 : 0}>
         <VStack spacing={8} align="center" justify="center" minH="100vh">
           <Logo size="xl" />
@@ -63,25 +70,123 @@ export default function Home() {
               Connect Wallet
             </Button>
           ) : (
-            <HStack spacing={4} mt={8}>
+            <VStack spacing={4} mt={8}>
               <Button
                 size="lg"
                 variant="solid"
-                onClick={() => router.push('/dashboard')}
+                onClick={onTalentModalOpen}
+                bgGradient="linear(to-r, green.400, teal.500)"
+                color="white"
+                _hover={{
+                  bgGradient: "linear(to-r, green.500, teal.600)",
+                }}
+                w="300px"
               >
-                Explore Projects
+                Register as Talent
+              </Button>
+              <Button
+                size="lg"
+                variant="solid"
+                onClick={onProjectModalOpen}
+                bgGradient="linear(to-r, orange.400, red.500)"
+                color="white"
+                _hover={{
+                  bgGradient: "linear(to-r, orange.500, red.600)",
+                }}
+                w="300px"
+              >
+                Register Project
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => router.push('/register')}
+                onClick={() => router.push('/projects')}
+                color="white"
+                borderColor="whiteAlpha.400"
+                _hover={{ bg: 'whiteAlpha.200' }}
+                w="300px"
               >
-                Register as Talent
+                View Project List
               </Button>
-            </HStack>
+            </VStack>
           )}
         </VStack>
       </Container>
+
+      {/* Register as Talent Modal */}
+      <Modal isOpen={isTalentModalOpen} onClose={onTalentModalClose}>
+        <ModalOverlay />
+        <ModalContent bg="gray.800" color="white">
+          <ModalHeader>Register as Talent</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Full Name</FormLabel>
+                <Input placeholder="Enter your full name" />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Skills</FormLabel>
+                <Select placeholder="Select your primary skill">
+                  <option value="carpenter">Carpenter</option>
+                  <option value="electrician">Electrician</option>
+                  <option value="plumber">Plumber</option>
+                  <option value="mason">Mason</option>
+                  <option value="painter">Painter</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Experience (years)</FormLabel>
+                <Input type="number" placeholder="Years of experience" />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Bio</FormLabel>
+                <Textarea placeholder="Tell us about yourself" />
+              </FormControl>
+              <Button colorScheme="blue" w="full">
+                Register
+              </Button>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Register Project Modal */}
+      <Modal isOpen={isProjectModalOpen} onClose={onProjectModalClose}>
+        <ModalOverlay />
+        <ModalContent bg="gray.800" color="white">
+          <ModalHeader>Register New Project</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Project Title</FormLabel>
+                <Input placeholder="Enter project title" />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Project Type</FormLabel>
+                <Select placeholder="Select project type">
+                  <option value="residential">Residential</option>
+                  <option value="commercial">Commercial</option>
+                  <option value="industrial">Industrial</option>
+                  <option value="infrastructure">Infrastructure</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Budget (ETH)</FormLabel>
+                <Input type="number" placeholder="Enter budget in ETH" />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Description</FormLabel>
+                <Textarea placeholder="Describe your project" />
+              </FormControl>
+              <Button colorScheme="blue" w="full">
+                Create Project
+              </Button>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 } 
