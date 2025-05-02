@@ -1,4 +1,4 @@
-import { Box, Flex, Button, HStack, Text, useDisclosure } from '@chakra-ui/react';
+import { Box, Flex, Button, HStack, Text } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Logo from './Logo';
 
@@ -34,14 +34,6 @@ const Navigation = ({ account, onDisconnect }) => {
         </Box>
 
         <HStack spacing={4}>
-          <Button
-            variant="ghost"
-            color="white"
-            _hover={{ bg: 'whiteAlpha.200' }}
-            onClick={() => router.push('/projects')}
-          >
-            View Projects
-          </Button>
           {account && (
             <>
               <Button

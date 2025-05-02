@@ -1,4 +1,4 @@
-import { Box, Container, VStack, Button, HStack, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, FormControl, FormLabel, Input, Textarea, Select } from '@chakra-ui/react';
+import { Box, Container, VStack, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, FormControl, FormLabel, Input, Textarea, Select } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Navigation from '../components/Navigation';
@@ -10,7 +10,6 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [account, setAccount] = useState('');
   
-  const { isOpen: isTalentModalOpen, onOpen: onTalentModalOpen, onClose: onTalentModalClose } = useDisclosure();
   const { isOpen: isProjectModalOpen, onOpen: onProjectModalOpen, onClose: onProjectModalClose } = useDisclosure();
 
   const connectWallet = async () => {
@@ -70,92 +69,47 @@ export default function Home() {
               Connect Wallet
             </Button>
           ) : (
-            <VStack spacing={4} mt={8}>
+            <VStack spacing={6} mt={8}>
               <Button
                 size="lg"
                 variant="solid"
-                onClick={onTalentModalOpen}
+                onClick={onProjectModalOpen}
                 bgGradient="linear(to-r, green.400, teal.500)"
                 color="white"
                 _hover={{
                   bgGradient: "linear(to-r, green.500, teal.600)",
                 }}
                 w="300px"
+                h="60px"
+                fontSize="xl"
               >
-                Register as Talent
+                Post Project
               </Button>
               <Button
                 size="lg"
                 variant="solid"
-                onClick={onProjectModalOpen}
+                onClick={() => router.push('/projects')}
                 bgGradient="linear(to-r, orange.400, red.500)"
                 color="white"
                 _hover={{
                   bgGradient: "linear(to-r, orange.500, red.600)",
                 }}
                 w="300px"
+                h="60px"
+                fontSize="xl"
               >
-                Register Project
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push('/projects')}
-                color="white"
-                borderColor="whiteAlpha.400"
-                _hover={{ bg: 'whiteAlpha.200' }}
-                w="300px"
-              >
-                View Project List
+                Find Projects
               </Button>
             </VStack>
           )}
         </VStack>
       </Container>
 
-      {/* Register as Talent Modal */}
-      <Modal isOpen={isTalentModalOpen} onClose={onTalentModalClose}>
-        <ModalOverlay />
-        <ModalContent bg="gray.800" color="white">
-          <ModalHeader>Register as Talent</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <VStack spacing={4}>
-              <FormControl>
-                <FormLabel>Full Name</FormLabel>
-                <Input placeholder="Enter your full name" />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Skills</FormLabel>
-                <Select placeholder="Select your primary skill">
-                  <option value="carpenter">Carpenter</option>
-                  <option value="electrician">Electrician</option>
-                  <option value="plumber">Plumber</option>
-                  <option value="mason">Mason</option>
-                  <option value="painter">Painter</option>
-                </Select>
-              </FormControl>
-              <FormControl>
-                <FormLabel>Experience (years)</FormLabel>
-                <Input type="number" placeholder="Years of experience" />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Bio</FormLabel>
-                <Textarea placeholder="Tell us about yourself" />
-              </FormControl>
-              <Button colorScheme="blue" w="full">
-                Register
-              </Button>
-            </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
       {/* Register Project Modal */}
       <Modal isOpen={isProjectModalOpen} onClose={onProjectModalClose}>
         <ModalOverlay />
         <ModalContent bg="gray.800" color="white">
-          <ModalHeader>Register New Project</ModalHeader>
+          <ModalHeader>Post New Project</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <VStack spacing={4}>
@@ -181,7 +135,7 @@ export default function Home() {
                 <Textarea placeholder="Describe your project" />
               </FormControl>
               <Button colorScheme="blue" w="full">
-                Create Project
+                Post Project
               </Button>
             </VStack>
           </ModalBody>
