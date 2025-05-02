@@ -1,5 +1,4 @@
-import { Box, Text, VStack } from '@chakra-ui/react';
-import { keyframes } from '@emotion/react';
+import { Box, Text, HStack, keyframes } from '@chakra-ui/react';
 
 const gradientAnimation = keyframes`
   0% { background-position: 0% 50%; }
@@ -8,11 +7,12 @@ const gradientAnimation = keyframes`
 `;
 
 const Logo = ({ size = 'xl' }) => {
+  const isLarge = size === 'xl';
   return (
-    <VStack spacing={4}>
+    <HStack spacing={4} align="center">
       <Box
-        w={size === 'xl' ? '160px' : '120px'}
-        h={size === 'xl' ? '160px' : '120px'}
+        w={isLarge ? '80px' : '40px'}
+        h={isLarge ? '80px' : '40px'}
         borderRadius="full"
         position="relative"
         overflow="hidden"
@@ -36,7 +36,7 @@ const Logo = ({ size = 'xl' }) => {
         }}
       >
         <Text
-          fontSize={size === 'xl' ? '6xl' : '4xl'}
+          fontSize={isLarge ? '4xl' : '2xl'}
           fontWeight="bold"
           color="white"
           position="relative"
@@ -46,25 +46,29 @@ const Logo = ({ size = 'xl' }) => {
           CT
         </Text>
       </Box>
-      <Text
-        fontSize={size === 'xl' ? '5xl' : '3xl'}
-        fontWeight="bold"
-        bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
-        bgClip="text"
-        letterSpacing="tight"
-      >
-        Construction
-      </Text>
-      <Text
-        fontSize={size === 'xl' ? '4xl' : '2xl'}
-        fontWeight="bold"
-        color="white"
-        textShadow="2px 2px 4px rgba(0, 0, 0, 0.2)"
-        letterSpacing="wide"
-      >
-        Talent Web3
-      </Text>
-    </VStack>
+      <Box>
+        <Text
+          fontSize={isLarge ? '3xl' : 'xl'}
+          fontWeight="bold"
+          bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+          bgClip="text"
+          letterSpacing="tight"
+          lineHeight="1"
+        >
+          Construction
+        </Text>
+        <Text
+          fontSize={isLarge ? '2xl' : 'lg'}
+          fontWeight="bold"
+          color="white"
+          textShadow="2px 2px 4px rgba(0, 0, 0, 0.2)"
+          letterSpacing="wide"
+          lineHeight="1"
+        >
+          Talent Web3
+        </Text>
+      </Box>
+    </HStack>
   );
 };
 
