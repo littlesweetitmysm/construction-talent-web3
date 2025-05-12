@@ -15,18 +15,9 @@ const Logo = ({ size = 'xl' }) => {
         sx={{
           animation: 'gradient 3s ease infinite',
           '@keyframes gradient': {
-            '0%': { 
-              backgroundPosition: '0% 50%',
-              transform: 'rotate(0deg)'
-            },
-            '50%': { 
-              backgroundPosition: '100% 50%',
-              transform: 'rotate(180deg)'
-            },
-            '100%': { 
-              backgroundPosition: '0% 50%',
-              transform: 'rotate(360deg)'
-            }
+            '0%': { backgroundPosition: '0% 50%' },
+            '50%': { backgroundPosition: '100% 50%' },
+            '100%': { backgroundPosition: '0% 50%' }
           }
         }}
         display="flex"
@@ -36,7 +27,12 @@ const Logo = ({ size = 'xl' }) => {
         _hover={{
           boxShadow: "0 0 40px rgba(66, 153, 225, 0.8)",
           transform: "scale(1.05)",
-          transition: "all 0.3s ease"
+          transition: "all 0.3s ease",
+          animation: "rotateOnce 0.5s ease-out forwards",
+          '@keyframes rotateOnce': {
+            '0%': { transform: 'rotate(0deg) scale(1.05)' },
+            '100%': { transform: 'rotate(360deg) scale(1.05)' }
+          }
         }}
       >
         <Text
