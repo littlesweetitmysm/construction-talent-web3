@@ -1,4 +1,11 @@
 import { Box, Text, HStack } from '@chakra-ui/react';
+import { keyframes } from '@emotion/react';
+
+const gradientAnimation = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
 
 const Logo = ({ size = 'xl' }) => {
   const isLarge = size === 'xl';
@@ -13,12 +20,7 @@ const Logo = ({ size = 'xl' }) => {
         bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
         backgroundSize="200% 200%"
         sx={{
-          animation: 'gradient 8s ease infinite',
-          '@keyframes gradient': {
-            '0%': { backgroundPosition: '0% 50%' },
-            '50%': { backgroundPosition: '100% 50%' },
-            '100%': { backgroundPosition: '0% 50%' }
-          }
+          animation: gradientAnimation,
         }}
         display="flex"
         alignItems="center"
