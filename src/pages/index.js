@@ -106,35 +106,94 @@ export default function Home() {
       </Container>
 
       {/* Register Project Modal */}
-      <Modal isOpen={isProjectModalOpen} onClose={onProjectModalClose}>
-        <ModalOverlay />
-        <ModalContent bg="gray.800" color="white">
-          <ModalHeader>Post New Project</ModalHeader>
+      <Modal isOpen={isProjectModalOpen} onClose={onProjectModalClose} size="4xl">
+        <ModalOverlay backdropFilter="blur(4px)" />
+        <ModalContent bg="gray.800" color="white" minH="70vh">
+          <ModalHeader fontSize="2xl" pb={6}>Post New Project</ModalHeader>
           <ModalCloseButton />
-          <ModalBody pb={6}>
-            <VStack spacing={4}>
+          <ModalBody pb={8}>
+            <VStack spacing={6}>
               <FormControl>
-                <FormLabel>Project Title</FormLabel>
-                <Input placeholder="Enter project title" />
+                <FormLabel fontSize="lg">Project Title</FormLabel>
+                <Input 
+                  placeholder="Enter project title" 
+                  size="lg"
+                  _placeholder={{ color: 'gray.400' }}
+                />
               </FormControl>
+
               <FormControl>
-                <FormLabel>Project Type</FormLabel>
-                <Select placeholder="Select project type">
-                  <option value="residential">Residential</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="industrial">Industrial</option>
-                  <option value="infrastructure">Infrastructure</option>
+                <FormLabel fontSize="lg">Project Type</FormLabel>
+                <Select 
+                  placeholder="Select project type"
+                  size="lg"
+                  _placeholder={{ color: 'gray.400' }}
+                >
+                  <option value="residential">Residential Construction</option>
+                  <option value="commercial">Commercial Building</option>
+                  <option value="industrial">Industrial Facility</option>
+                  <option value="infrastructure">Infrastructure Development</option>
+                  <option value="renovation">Renovation</option>
+                  <option value="specialty">Specialty Construction</option>
                 </Select>
               </FormControl>
+
               <FormControl>
-                <FormLabel>Budget (ETH)</FormLabel>
-                <Input type="number" placeholder="Enter budget in ETH" />
+                <FormLabel fontSize="lg">Required Skills</FormLabel>
+                <Select 
+                  placeholder="Select required skills"
+                  size="lg"
+                  multiple
+                  _placeholder={{ color: 'gray.400' }}
+                >
+                  <option value="electrical">Electrical</option>
+                  <option value="plumbing">Plumbing</option>
+                  <option value="carpentry">Carpentry</option>
+                  <option value="masonry">Masonry</option>
+                  <option value="hvac">HVAC</option>
+                  <option value="painting">Painting</option>
+                  <option value="roofing">Roofing</option>
+                  <option value="general">General Construction</option>
+                </Select>
               </FormControl>
+
               <FormControl>
-                <FormLabel>Description</FormLabel>
-                <Textarea placeholder="Describe your project" />
+                <FormLabel fontSize="lg">Budget (ETH)</FormLabel>
+                <Input 
+                  type="number" 
+                  placeholder="Enter budget in ETH"
+                  size="lg"
+                  _placeholder={{ color: 'gray.400' }}
+                />
               </FormControl>
-              <Button colorScheme="blue" w="full">
+
+              <FormControl>
+                <FormLabel fontSize="lg">Project Timeline</FormLabel>
+                <Input 
+                  type="date"
+                  size="lg"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontSize="lg">Description</FormLabel>
+                <Textarea 
+                  placeholder="Describe your project in detail..."
+                  size="lg"
+                  minH="200px"
+                  _placeholder={{ color: 'gray.400' }}
+                />
+              </FormControl>
+
+              <Button 
+                colorScheme="blue" 
+                w="full"
+                size="lg"
+                height="60px"
+                fontSize="lg"
+                mt={4}
+              >
                 Post Project
               </Button>
             </VStack>
