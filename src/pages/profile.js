@@ -21,237 +21,320 @@ import {
   StatNumber,
   StatHelpText,
   StatArrow,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Select,
 } from '@chakra-ui/react';
+import { useRouter } from 'next/router';
 import Navigation from '../components/Navigation';
 import { getTalentInfo } from '../utils/contract';
+import { ethers } from 'ethers';
+import ConstructionTalent from '../contracts/ConstructionTalent.json';
 
-const Profile = ({ provider, signer, account }) => {
+const Profile = () => {
   const [profile, setProfile] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+  const [account, setAccount] = useState('');
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  const router = useRouter();
+  const { address } = router.query;
+
   const [formData, setFormData] = useState({
     name: '',
-    skills: '',
-    experience: '',
-    certifications: '',
+    gender: '',
+    birthday: '',
+    physicalAddress: '',
+    governmentId: '',
+    career: '',
   });
-  const [loading, setLoading] = useState(true);
-  const toast = useToast();
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!provider || !account) return;
+    checkConnection();
+    if (address) {
+      fetchProfile();
+    }
+  }, [address]);
 
+  const checkConnection = async () => {
+    if (window.ethereum) {
       try {
-        const talentInfo = await getTalentInfo(provider, account);
-        if (talentInfo) {
-          setProfile(talentInfo);
-          setFormData({
-            name: talentInfo.name,
-            skills: talentInfo.skills,
-            experience: talentInfo.experience.toString(),
-            certifications: talentInfo.certifications,
-          });
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          setIsOwner(accounts[0].toLowerCase() === address?.toLowerCase());
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load profile data',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
+        console.error('Error checking connection:', error);
       }
-    };
+    }
+  };
 
-    loadProfile();
-  }, [provider, account]);
+  const fetchProfile = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+        ConstructionTalent.abi,
+        provider
+      );
 
-  const handleChange = (e) => {
+      const talentInfo = await contract.getTalentInfo(address);
+      
+      if (talentInfo.name === '') {
+        router.push('/404');
+        return;
+      }
+
+      setProfile({
+        name: talentInfo.name,
+        gender: talentInfo.gender,
+        birthday: new Date(talentInfo.birthday * 1000).toISOString().split('T')[0],
+        physicalAddress: talentInfo.physicalAddress,
+        governmentId: talentInfo.governmentId,
+        career: talentInfo.career,
+        isVerified: talentInfo.isVerified,
+        rating: talentInfo.rating.toNumber(),
+        completedProjects: talentInfo.completedProjects.toNumber(),
+        lastUpdateTimestamp: new Date(talentInfo.lastUpdateTimestamp * 1000),
+      });
+
+      setFormData({
+        name: talentInfo.name,
+        gender: talentInfo.gender,
+        birthday: new Date(talentInfo.birthday * 1000).toISOString().split('T')[0],
+        physicalAddress: talentInfo.physicalAddress,
+        governmentId: talentInfo.governmentId,
+        career: talentInfo.career,
+      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch profile information',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // In a real application, you would update the profile on the blockchain
-    toast({
-      title: 'Success',
-      description: 'Profile updated successfully',
-      status: 'success',
-      duration: 5000,
-      isClosable: true,
-    });
-    setIsEditing(false);
+  const handleUpdateProfile = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+        ConstructionTalent.abi,
+        signer
+      );
+
+      const birthdayTimestamp = Math.floor(new Date(formData.birthday).getTime() / 1000);
+
+      const tx = await contract.updateTalentProfile(
+        formData.name,
+        formData.gender,
+        birthdayTimestamp,
+        formData.physicalAddress,
+        formData.governmentId,
+        formData.career
+      );
+
+      await tx.wait();
+
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been updated successfully',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onClose();
+      fetchProfile();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Update Failed',
+        description: error.message || 'Failed to update profile',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   if (loading) {
     return (
-      <>
-        <Navigation account={account} />
-        <Container maxW="container.xl" pt={20} pb={10}>
-          <Text>Loading profile...</Text>
+      <Box minH="100vh" bg="gray.50">
+        <Navigation />
+        <Container maxW="container.md" py={10}>
+          <Text>Loading...</Text>
         </Container>
-      </>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <>
-        <Navigation account={account} />
-        <Container maxW="container.xl" pt={20} pb={10}>
-          <VStack spacing={4}>
-            <Heading as="h1" size="xl">
-              Profile Not Found
-            </Heading>
-            <Text>You need to register as a talent first.</Text>
-            <Button
-              colorScheme="blue"
-              onClick={() => window.location.href = '/talents'}
-            >
-              Register as Talent
-            </Button>
-          </VStack>
-        </Container>
-      </>
+      </Box>
     );
   }
 
   return (
-    <>
-      <Navigation account={account} />
-      <Container maxW="container.xl" pt={20} pb={10}>
+    <Box minH="100vh" bg="gray.50">
+      <Navigation />
+      <Container maxW="container.md" py={10}>
         <VStack spacing={8} align="stretch">
-          <HStack justify="space-between">
-            <Heading as="h1" size="xl">
-              Profile
-            </Heading>
-            <Button
-              colorScheme="blue"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? 'Cancel' : 'Edit Profile'}
-            </Button>
-          </HStack>
-
-          {isEditing ? (
-            <Box as="form" onSubmit={handleSubmit}>
-              <VStack spacing={6}>
-                <FormControl isRequired>
-                  <FormLabel>Full Name</FormLabel>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Skills</FormLabel>
-                  <Textarea
-                    name="skills"
-                    value={formData.skills}
-                    onChange={handleChange}
-                    placeholder="Enter your skills (comma-separated)"
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Years of Experience</FormLabel>
-                  <Input
-                    name="experience"
-                    type="number"
-                    value={formData.experience}
-                    onChange={handleChange}
-                    placeholder="Enter years of experience"
-                    min="0"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Certifications</FormLabel>
-                  <Textarea
-                    name="certifications"
-                    value={formData.certifications}
-                    onChange={handleChange}
-                    placeholder="Enter your certifications (comma-separated)"
-                  />
-                </FormControl>
-
-                <Button type="submit" colorScheme="blue" width="full">
-                  Save Changes
-                </Button>
-              </VStack>
-            </Box>
-          ) : (
-            <>
-              <HStack spacing={8} align="start">
-                <Avatar
-                  size="2xl"
-                  name={profile.name}
-                  bg="blue.500"
-                  color="white"
-                />
-                <VStack align="start" spacing={4}>
-                  <Heading as="h2" size="lg">
-                    {profile.name}
-                  </Heading>
-                  <Badge colorScheme={profile.isVerified ? 'green' : 'yellow'}>
-                    {profile.isVerified ? 'Verified' : 'Pending Verification'}
-                  </Badge>
-                  <Text color="gray.600">{profile.skills}</Text>
-                </VStack>
+          <Box
+            bg="white"
+            p={8}
+            borderRadius="xl"
+            boxShadow="xl"
+          >
+            <VStack spacing={6} align="stretch">
+              <HStack justify="space-between">
+                <Heading size="xl">{profile.name}</Heading>
+                {isOwner && (
+                  <Button colorScheme="blue" onClick={onOpen}>
+                    Edit Profile
+                  </Button>
+                )}
               </HStack>
 
-              <Divider />
+              <HStack>
+                <Badge colorScheme={profile.isVerified ? 'green' : 'yellow'}>
+                  {profile.isVerified ? 'Verified' : 'Pending Verification'}
+                </Badge>
+                <Badge colorScheme="blue">
+                  Rating: {profile.rating}/5
+                </Badge>
+                <Badge colorScheme="purple">
+                  {profile.completedProjects} Projects Completed
+                </Badge>
+              </HStack>
 
-              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-                <Stat>
-                  <StatLabel>Experience</StatLabel>
-                  <StatNumber>{profile.experience} years</StatNumber>
-                  <StatHelpText>
-                    <StatArrow type="increase" />
-                    1 year
-                  </StatHelpText>
-                </Stat>
+              <VStack align="stretch" spacing={4}>
+                <Box>
+                  <Text fontWeight="bold">Gender</Text>
+                  <Text>{profile.gender}</Text>
+                </Box>
 
-                <Stat>
-                  <StatLabel>Projects Completed</StatLabel>
-                  <StatNumber>{profile.projectCount}</StatNumber>
-                  <StatHelpText>
-                    <StatArrow type="increase" />
-                    2 projects
-                  </StatHelpText>
-                </Stat>
+                <Box>
+                  <Text fontWeight="bold">Birthday</Text>
+                  <Text>{profile.birthday}</Text>
+                </Box>
 
-                <Stat>
-                  <StatLabel>Rating</StatLabel>
-                  <StatNumber>{profile.rating}/5</StatNumber>
-                  <StatHelpText>
-                    <StatArrow type="increase" />
-                    0.5 points
-                  </StatHelpText>
-                </Stat>
-              </SimpleGrid>
+                <Box>
+                  <Text fontWeight="bold">Physical Address</Text>
+                  <Text>{profile.physicalAddress}</Text>
+                </Box>
 
-              <Box>
-                <Heading as="h3" size="md" mb={4}>
-                  Certifications
-                </Heading>
-                <Text color="gray.600">{profile.certifications}</Text>
-              </Box>
-            </>
-          )}
+                <Box>
+                  <Text fontWeight="bold">Government ID</Text>
+                  <Text>{profile.governmentId}</Text>
+                </Box>
+
+                <Box>
+                  <Text fontWeight="bold">Career</Text>
+                  <Text>{profile.career}</Text>
+                </Box>
+
+                <Box>
+                  <Text fontWeight="bold">Last Updated</Text>
+                  <Text>{profile.lastUpdateTimestamp.toLocaleString()}</Text>
+                </Box>
+              </VStack>
+            </VStack>
+          </Box>
         </VStack>
       </Container>
-    </>
+
+      {/* Edit Profile Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit Profile</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Full Name</FormLabel>
+                <Input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Gender</FormLabel>
+                <Select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Birthday</FormLabel>
+                <Input
+                  name="birthday"
+                  type="date"
+                  value={formData.birthday}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Physical Address</FormLabel>
+                <Textarea
+                  name="physicalAddress"
+                  value={formData.physicalAddress}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Government ID</FormLabel>
+                <Input
+                  name="governmentId"
+                  value={formData.governmentId}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Career</FormLabel>
+                <Textarea
+                  name="career"
+                  value={formData.career}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <Button colorScheme="blue" onClick={handleUpdateProfile} width="full">
+                Update Profile
+              </Button>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
 };
 
