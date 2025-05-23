@@ -3,21 +3,16 @@ import {
   Box,
   Flex,
   HStack,
-  IconButton,
-  Button,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
-  useDisclosure,
+  IconButton,
   useColorModeValue,
-  Stack,
-  useColorMode,
   Text,
-  Avatar,
-  Badge,
+  Link as ChakraLink,
 } from '@chakra-ui/react';
-import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { HamburgerIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Logo from './Logo';
@@ -26,13 +21,12 @@ import ConstructionTalent from '../contracts/ConstructionTalent.json';
 
 const Links = [
   { name: 'Home', href: '/' },
-  { name: 'Projects', href: '/projects' },
-  { name: 'Talents', href: '/talents' },
+  { name: 'Find Projects', href: '/projects' },
 ];
 
 const NavLink = ({ children, href }) => (
   <Link href={href} passHref>
-    <Text
+    <ChakraLink
       px={2}
       py={1}
       rounded={'md'}
@@ -42,17 +36,18 @@ const NavLink = ({ children, href }) => (
       }}
     >
       {children}
-    </Text>
+    </ChakraLink>
   </Link>
 );
 
 export default function Navigation() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { colorMode, toggleColorMode } = useColorMode();
   const [account, setAccount] = useState('');
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const bgColor = useColorModeValue('white', 'gray.900');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
     checkConnection();
@@ -123,16 +118,33 @@ export default function Navigation() {
     }
   };
 
+  const handleProfileClick = () => {
+    if (hasProfile) {
+      router.push('/profile');
+    } else {
+      router.push('/register-talent');
+    }
+  };
+
+  const disconnectWallet = () => {
+    setAccount('');
+    setHasProfile(false);
+  };
+
   return (
-    <Box bg={useColorModeValue('white', 'gray.900')} px={4} boxShadow="sm">
+    <Box 
+      bg={bgColor} 
+      px={4} 
+      borderBottom={1}
+      borderStyle="solid"
+      borderColor={borderColor}
+      position="fixed"
+      top={0}
+      left={0}
+      right={0}
+      zIndex={10}
+    >
       <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
-        <IconButton
-          size={'md'}
-          icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
-          aria-label={'Open Menu'}
-          display={{ md: 'none' }}
-          onClick={isOpen ? onClose : onOpen}
-        />
         <HStack spacing={8} alignItems={'center'}>
           <Logo size="small" />
           <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
@@ -143,72 +155,41 @@ export default function Navigation() {
             ))}
           </HStack>
         </HStack>
-        <Flex alignItems={'center'}>
-          <Stack direction={'row'} spacing={7}>
-            <Button onClick={toggleColorMode}>
-              {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-            </Button>
 
-            {!isLoading && (
-              <>
-                {!account ? (
-                  <Button
-                    onClick={connectWallet}
-                    colorScheme="blue"
-                    variant="solid"
-                  >
-                    Connect Wallet
-                  </Button>
-                ) : (
-                  <Menu>
-                    <MenuButton
-                      as={Button}
-                      rounded={'full'}
-                      variant={'link'}
-                      cursor={'pointer'}
-                      minW={0}
-                    >
-                      <Avatar
-                        size={'sm'}
-                        name={account.slice(0, 6) + '...' + account.slice(-4)}
-                      />
-                    </MenuButton>
-                    <MenuList>
-                      <MenuItem onClick={() => router.push('/dashboard')}>
-                        Dashboard
-                      </MenuItem>
-                      {hasProfile ? (
-                        <MenuItem onClick={() => router.push('/profile')}>
-                          My Profile
-                        </MenuItem>
-                      ) : (
-                        <MenuItem onClick={() => router.push('/register-talent')}>
-                          Register as Talent
-                        </MenuItem>
-                      )}
-                      <MenuItem onClick={() => window.ethereum.request({ method: 'eth_requestAccounts' })}>
-                        Switch Account
-                      </MenuItem>
-                    </MenuList>
-                  </Menu>
-                )}
-              </>
+        {!isLoading && (
+          <>
+            {!account ? (
+              <IconButton
+                onClick={connectWallet}
+                colorScheme="blue"
+                variant="solid"
+                icon={<HamburgerIcon />}
+                aria-label="Connect Wallet"
+              />
+            ) : (
+              <Menu>
+                <MenuButton
+                  as={IconButton}
+                  icon={<HamburgerIcon />}
+                  variant="outline"
+                  aria-label="Options"
+                />
+                <MenuList>
+                  <MenuItem onClick={() => window.open('https://metamask.io')}>
+                    {`${account.slice(0, 6)}...${account.slice(-4)}`}
+                  </MenuItem>
+                  <MenuItem onClick={handleProfileClick}>
+                    {hasProfile ? 'My Profile' : 'Register as Talent'}
+                  </MenuItem>
+                  <MenuItem onClick={disconnectWallet}>
+                    Disconnect
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             )}
-          </Stack>
-        </Flex>
+          </>
+        )}
       </Flex>
-
-      {isOpen ? (
-        <Box pb={4} display={{ md: 'none' }}>
-          <Stack as={'nav'} spacing={4}>
-            {Links.map((link) => (
-              <NavLink key={link.name} href={link.href}>
-                {link.name}
-              </NavLink>
-            ))}
-          </Stack>
-        </Box>
-      ) : null}
     </Box>
   );
 } 
