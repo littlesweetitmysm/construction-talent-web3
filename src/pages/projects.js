@@ -19,10 +19,11 @@ import {
   Button,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
+import { SearchIcon, AddIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
+import { useRouter } from 'next/router';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -37,6 +38,8 @@ const Projects = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const router = useRouter();
 
   useEffect(() => {
     fetchProjects();
@@ -127,7 +130,17 @@ const Projects = () => {
       <Navigation />
       <Container maxW="container.xl" pt={20} pb={10}>
         <VStack spacing={8} align="stretch">
-          <Heading size="xl" color={textColor}>Find Projects</Heading>
+          <HStack justify="space-between" align="center">
+            <Heading size="xl" color={textColor}>Projects</Heading>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              size="lg"
+              onClick={() => router.push('/post-project')}
+            >
+              Post New Project
+            </Button>
+          </HStack>
 
           {/* Search and Filters */}
           <Box p={6} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>

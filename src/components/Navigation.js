@@ -7,6 +7,7 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  MenuDivider,
   IconButton,
   useColorModeValue,
   Text,
@@ -21,7 +22,8 @@ import ConstructionTalent from '../contracts/ConstructionTalent.json';
 
 const Links = [
   { name: 'Home', href: '/' },
-  { name: 'Find Projects', href: '/projects' },
+  { name: 'Projects', href: '/projects' },
+  { name: 'Talents', href: '/talents' },
 ];
 
 const NavLink = ({ children, href }) => (
@@ -126,9 +128,19 @@ export default function Navigation() {
     }
   };
 
-  const disconnectWallet = () => {
-    setAccount('');
-    setHasProfile(false);
+  const disconnectWallet = async () => {
+    try {
+      if (window.ethereum) {
+        // Clear local state
+        setAccount('');
+        setHasProfile(false);
+        
+        // Reload the page to reset MetaMask connection
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+    }
   };
 
   return (
@@ -178,9 +190,11 @@ export default function Navigation() {
                   <MenuItem onClick={() => window.open('https://metamask.io')}>
                     {`${account.slice(0, 6)}...${account.slice(-4)}`}
                   </MenuItem>
+                  <MenuDivider />
                   <MenuItem onClick={handleProfileClick}>
                     {hasProfile ? 'My Profile' : 'Register as Talent'}
                   </MenuItem>
+                  <MenuDivider />
                   <MenuItem onClick={disconnectWallet}>
                     Disconnect
                   </MenuItem>
