@@ -26,10 +26,7 @@ function MyApp({ Component, pageProps }) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundImage: useColorModeValue(
-            "url('/images/cityscape-day.jpg')",
-            "url('/images/cityscape-night.jpg')"
-          ),
+          backgroundImage: "url('/images/cityscape-bg.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           zIndex: -2,
@@ -42,8 +39,8 @@ function MyApp({ Component, pageProps }) {
           right: 0,
           bottom: 0,
           bgGradient: useColorModeValue(
-            'linear(to-br, rgba(255, 255, 255, 0.8), rgba(200, 220, 255, 0.8))',
-            'linear(to-br, rgba(0, 0, 0, 0.8), rgba(20, 20, 40, 0.9))'
+            'linear(to-br, rgba(255, 255, 255, 0.85), rgba(200, 220, 255, 0.85))',
+            'linear(to-br, rgba(0, 0, 0, 0.95), rgba(10, 10, 30, 0.98))'
           ),
           zIndex: -1,
         }}

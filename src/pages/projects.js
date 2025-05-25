@@ -18,6 +18,19 @@ import {
   Divider,
   Button,
   useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Textarea,
+  NumberInput,
+  NumberInputField,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { SearchIcon, AddIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
@@ -34,10 +47,20 @@ const Projects = () => {
     status: '',
     budget: '',
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [newProject, setNewProject] = useState({
+    title: '',
+    description: '',
+    type: '',
+    budget: '',
+    deadline: '',
+  });
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const modalBg = useColorModeValue('white', 'gray.800');
 
   const router = useRouter();
 
@@ -125,6 +148,41 @@ const Projects = () => {
     }));
   };
 
+  const handleNewProjectChange = (e) => {
+    const { name, value } = e.target;
+    setNewProject(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmitProject = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+        ConstructionTalent.abi,
+        signer
+      );
+
+      const tx = await contract.createProject(
+        newProject.title,
+        newProject.description,
+        newProject.type,
+        ethers.utils.parseEther(newProject.budget),
+        Math.floor(new Date(newProject.deadline).getTime() / 1000)
+      );
+
+      await tx.wait();
+      onClose();
+      // Refresh projects list
+      fetchProjects();
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
+  };
+
   return (
     <Box minH="100vh">
       <Navigation />
@@ -136,7 +194,7 @@ const Projects = () => {
               leftIcon={<AddIcon />}
               colorScheme="blue"
               size="lg"
-              onClick={() => router.push('/post-project')}
+              onClick={onOpen}
             >
               Post New Project
             </Button>
@@ -229,6 +287,84 @@ const Projects = () => {
           </SimpleGrid>
         </VStack>
       </Container>
+
+      {/* Post Project Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent bg={modalBg}>
+          <ModalHeader color={textColor}>Post New Project</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel color={textColor}>Project Title</FormLabel>
+                <Input
+                  name="title"
+                  value={newProject.title}
+                  onChange={handleNewProjectChange}
+                  placeholder="Enter project title"
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color={textColor}>Description</FormLabel>
+                <Textarea
+                  name="description"
+                  value={newProject.description}
+                  onChange={handleNewProjectChange}
+                  placeholder="Enter project description"
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color={textColor}>Project Type</FormLabel>
+                <Select
+                  name="type"
+                  value={newProject.type}
+                  onChange={handleNewProjectChange}
+                  placeholder="Select project type"
+                >
+                  <option value="residential">Residential</option>
+                  <option value="commercial">Commercial</option>
+                  <option value="industrial">Industrial</option>
+                  <option value="infrastructure">Infrastructure</option>
+                </Select>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color={textColor}>Budget (ETH)</FormLabel>
+                <NumberInput min={0}>
+                  <NumberInputField
+                    name="budget"
+                    value={newProject.budget}
+                    onChange={handleNewProjectChange}
+                    placeholder="Enter budget in ETH"
+                  />
+                </NumberInput>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color={textColor}>Deadline</FormLabel>
+                <Input
+                  name="deadline"
+                  type="date"
+                  value={newProject.deadline}
+                  onChange={handleNewProjectChange}
+                />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleSubmitProject}>
+              Post Project
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
