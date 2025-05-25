@@ -15,11 +15,11 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import Navigation from '../components/Navigation';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
+import Navigation from '../components/Navigation';
 
-const RegisterTalent = () => {
+export default function RegisterTalent() {
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -27,12 +27,11 @@ const RegisterTalent = () => {
     physicalAddress: '',
     governmentId: '',
     career: '',
+    certifications: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
   const router = useRouter();
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,11 +43,11 @@ const RegisterTalent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       if (!window.ethereum) {
-        throw new Error('Please install MetaMask to register');
+        throw new Error('Please install MetaMask to use this feature');
       }
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -59,23 +58,21 @@ const RegisterTalent = () => {
         signer
       );
 
-      // Convert birthday to timestamp
-      const birthdayTimestamp = Math.floor(new Date(formData.birthday).getTime() / 1000);
-
       const tx = await contract.registerTalent(
         formData.name,
         formData.gender,
-        birthdayTimestamp,
+        formData.birthday,
         formData.physicalAddress,
         formData.governmentId,
-        formData.career
+        formData.career,
+        formData.certifications
       );
 
       await tx.wait();
 
       toast({
-        title: 'Registration Successful',
-        description: 'Your talent profile has been created!',
+        title: 'Registration successful!',
+        description: 'Your talent profile has been created.',
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -85,16 +82,20 @@ const RegisterTalent = () => {
     } catch (error) {
       console.error('Registration error:', error);
       toast({
-        title: 'Registration Failed',
-        description: error.message || 'Failed to register talent profile',
+        title: 'Registration failed',
+        description: error.message || 'There was an error registering your profile',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
+
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   return (
     <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.900')}>
@@ -102,21 +103,22 @@ const RegisterTalent = () => {
       <Container maxW="container.md" pt={20}>
         <VStack
           spacing={8}
-          bg={useColorModeValue('white', 'gray.800')}
+          bg={bgColor}
           p={8}
-          borderRadius="lg"
-          boxShadow="lg"
-          w="full"
+          borderRadius="xl"
+          boxShadow="xl"
+          borderWidth="1px"
+          borderColor={borderColor}
         >
-          <Heading size="xl" textAlign="center" color="blue.500">
+          <Heading size="xl" textAlign="center" color={useColorModeValue('blue.600', 'blue.400')}>
             Register as a Talent
           </Heading>
-          <Text textAlign="center" color="gray.500">
+          <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.400')} textAlign="center" pb={4}>
             Fill in your details to create your talent profile
           </Text>
 
-          <form onSubmit={handleSubmit}>
-            <VStack spacing={6}>
+          <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+            <VStack spacing={6} align="stretch">
               <FormControl isRequired>
                 <FormLabel>Full Name</FormLabel>
                 <Input
@@ -124,6 +126,8 @@ const RegisterTalent = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Enter your full name"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
                 />
               </FormControl>
 
@@ -134,6 +138,8 @@ const RegisterTalent = () => {
                   value={formData.gender}
                   onChange={handleInputChange}
                   placeholder="Select gender"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -142,12 +148,14 @@ const RegisterTalent = () => {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel>Birthday</FormLabel>
+                <FormLabel>Date of Birth</FormLabel>
                 <Input
                   name="birthday"
                   type="date"
                   value={formData.birthday}
                   onChange={handleInputChange}
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
                 />
               </FormControl>
 
@@ -158,6 +166,8 @@ const RegisterTalent = () => {
                   value={formData.physicalAddress}
                   onChange={handleInputChange}
                   placeholder="Enter your physical address"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
                 />
               </FormControl>
 
@@ -168,16 +178,32 @@ const RegisterTalent = () => {
                   value={formData.governmentId}
                   onChange={handleInputChange}
                   placeholder="Enter your government ID number"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel>Career</FormLabel>
-                <Textarea
+                <FormLabel>Career/Profession</FormLabel>
+                <Input
                   name="career"
                   value={formData.career}
                   onChange={handleInputChange}
-                  placeholder="Describe your career and experience"
+                  placeholder="Enter your career or profession"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Certifications</FormLabel>
+                <Textarea
+                  name="certifications"
+                  value={formData.certifications}
+                  onChange={handleInputChange}
+                  placeholder="List your relevant certifications"
+                  bg={useColorModeValue('white', 'gray.700')}
+                  borderColor={borderColor}
                 />
               </FormControl>
 
@@ -185,11 +211,16 @@ const RegisterTalent = () => {
                 type="submit"
                 colorScheme="blue"
                 size="lg"
-                width="full"
-                isLoading={loading}
+                w="full"
+                isLoading={isLoading}
                 loadingText="Registering..."
+                bg={useColorModeValue('blue.600', 'blue.400')}
+                color="white"
+                _hover={{
+                  bg: useColorModeValue('blue.700', 'blue.500'),
+                }}
               >
-                Register as Talent
+                Register
               </Button>
             </VStack>
           </form>
@@ -197,6 +228,4 @@ const RegisterTalent = () => {
       </Container>
     </Box>
   );
-};
-
-export default RegisterTalent; 
+} 
