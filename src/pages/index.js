@@ -13,21 +13,70 @@ import {
   HStack,
   useColorModeValue,
   Divider,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  Select,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/Navigation';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
 import { useState, useEffect } from 'react';
+import Logo from '../components/Logo';
 
 const Home = () => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const [isConnected, setIsConnected] = useState(false);
+  const [account, setAccount] = useState('');
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const connectWallet = async () => {
+    try {
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts'
+        });
+        setAccount(accounts[0]);
+        setIsConnected(true);
+      } else {
+        alert('Please install MetaMask!');
+      }
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+    }
+  };
+
+  const disconnectWallet = () => {
+    setAccount('');
+    setIsConnected(false);
+  };
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          setIsConnected(true);
+        }
+      }
+    };
+    checkConnection();
+  }, []);
 
   useEffect(() => {
     fetchProjects();
@@ -52,69 +101,61 @@ const Home = () => {
   };
 
   return (
-    <Box minH="100vh">
-      <Navigation />
-      <Container maxW="container.xl" pt={20} pb={10}>
-        <VStack spacing={8} align="stretch">
-          <VStack spacing={4} align="center" textAlign="center">
-            <Heading size="2xl" color={textColor}>
-              Welcome to Construction Talent
-            </Heading>
-            <Text fontSize="xl" color={textColor}>
-              Connect with top construction professionals and find your next project
-            </Text>
+    <Box minH="100vh" position="relative">
+      {isConnected && <Navigation account={account} onDisconnect={disconnectWallet} />}
+      <Container maxW="container.lg" pt={isConnected ? 32 : 0}>
+        <VStack spacing={8} align="center" justify="center" minH="100vh">
+          <Logo size="xl" />
+          {!isConnected ? (
             <Button
               size="lg"
-              colorScheme="blue"
-              onClick={() => router.push('/post-project')}
+              variant="solid"
+              onClick={connectWallet}
+              bgGradient="linear(to-r, blue.400, purple.500)"
+              color="white"
+              _hover={{
+                bgGradient: "linear(to-r, blue.500, purple.600)",
+              }}
+              px={8}
+              py={6}
+              fontSize="xl"
             >
-              Post a Project
+              Connect Wallet
             </Button>
-          </VStack>
-
-          <Heading size="lg" color={textColor}>
-            Latest Projects
-          </Heading>
-
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            {projects.slice(0, 6).map((project) => (
-              <Card key={project.id} bg={cardBg} borderWidth="1px" borderColor={borderColor}>
-                <CardBody>
-                  <Stack spacing={4}>
-                    <Heading size="md" color={textColor}>{project.title}</Heading>
-                    <Text color={textColor} noOfLines={3}>
-                      {project.description}
-                    </Text>
-                    <HStack>
-                      <Badge colorScheme="green">{project.type}</Badge>
-                      <Badge colorScheme="blue">{project.status}</Badge>
-                    </HStack>
-                    <Divider />
-                    <HStack justify="space-between">
-                      <Text color={textColor} fontWeight="bold">
-                        Budget: ${Number(project.budget).toLocaleString()}
-                      </Text>
-                      <Button size="sm" colorScheme="blue">
-                        View Details
-                      </Button>
-                    </HStack>
-                    <Text color="gray.500" fontSize="sm">
-                      Deadline: {project.deadline.toLocaleDateString()}
-                    </Text>
-                  </Stack>
-                </CardBody>
-              </Card>
-            ))}
-          </SimpleGrid>
-
-          <Button
-            variant="outline"
-            colorScheme="blue"
-            size="lg"
-            onClick={() => router.push('/projects')}
-          >
-            View All Projects
-          </Button>
+          ) : (
+            <VStack spacing={6} mt={8}>
+              <Button
+                size="lg"
+                variant="solid"
+                onClick={() => router.push('/post-project')}
+                bgGradient="linear(to-r, green.400, teal.500)"
+                color="white"
+                _hover={{
+                  bgGradient: "linear(to-r, green.500, teal.600)",
+                }}
+                w="300px"
+                h="60px"
+                fontSize="xl"
+              >
+                Post Project
+              </Button>
+              <Button
+                size="lg"
+                variant="solid"
+                onClick={() => router.push('/projects')}
+                bgGradient="linear(to-r, orange.400, red.500)"
+                color="white"
+                _hover={{
+                  bgGradient: "linear(to-r, orange.500, red.600)",
+                }}
+                w="300px"
+                h="60px"
+                fontSize="xl"
+              >
+                Find Projects
+              </Button>
+            </VStack>
+          )}
         </VStack>
       </Container>
     </Box>
