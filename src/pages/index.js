@@ -33,12 +33,11 @@ import ConstructionTalent from '../contracts/ConstructionTalent.json';
 import { useState, useEffect } from 'react';
 import Logo from '../components/Logo';
 
-const Home = () => {
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function Home() {
   const router = useRouter();
   const [isConnected, setIsConnected] = useState(false);
   const [account, setAccount] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -66,6 +65,7 @@ const Home = () => {
   };
 
   useEffect(() => {
+    setIsMounted(true);
     const checkConnection = async () => {
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
@@ -78,27 +78,9 @@ const Home = () => {
     checkConnection();
   }, []);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
-        ConstructionTalent.abi,
-        provider
-      );
-
-      const projects = await contract.getProjects();
-      setProjects(projects);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <Box minH="100vh" position="relative">
@@ -160,6 +142,4 @@ const Home = () => {
       </Container>
     </Box>
   );
-};
-
-export default Home; 
+} 
