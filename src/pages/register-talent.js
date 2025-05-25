@@ -2,17 +2,17 @@ import { useState } from 'react';
 import {
   Box,
   Container,
+  VStack,
   Heading,
   FormControl,
   FormLabel,
   Input,
   Button,
-  VStack,
   useToast,
+  useColorModeValue,
   Select,
   Textarea,
   Text,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/Navigation';
@@ -99,103 +99,101 @@ const RegisterTalent = () => {
   return (
     <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.900')}>
       <Navigation />
-      <Container maxW="container.md" py={10}>
-        <Box
-          bg={bgColor}
+      <Container maxW="container.md" pt={20}>
+        <VStack
+          spacing={8}
+          bg={useColorModeValue('white', 'gray.800')}
           p={8}
-          borderRadius="xl"
-          boxShadow="xl"
-          borderWidth="1px"
-          borderColor={borderColor}
+          borderRadius="lg"
+          boxShadow="lg"
+          w="full"
         >
-          <VStack spacing={8} align="stretch">
-            <Heading size="xl" textAlign="center" color="blue.500">
-              Register as a Talent
-            </Heading>
-            <Text textAlign="center" color="gray.500">
-              Fill in your details to create your talent profile
-            </Text>
+          <Heading size="xl" textAlign="center" color="blue.500">
+            Register as a Talent
+          </Heading>
+          <Text textAlign="center" color="gray.500">
+            Fill in your details to create your talent profile
+          </Text>
 
-            <form onSubmit={handleSubmit}>
-              <VStack spacing={6}>
-                <FormControl isRequired>
-                  <FormLabel>Full Name</FormLabel>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                  />
-                </FormControl>
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={6}>
+              <FormControl isRequired>
+                <FormLabel>Full Name</FormLabel>
+                <Input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter your full name"
+                />
+              </FormControl>
 
-                <FormControl isRequired>
-                  <FormLabel>Gender</FormLabel>
-                  <Select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    placeholder="Select gender"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </Select>
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Birthday</FormLabel>
-                  <Input
-                    name="birthday"
-                    type="date"
-                    value={formData.birthday}
-                    onChange={handleInputChange}
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Physical Address</FormLabel>
-                  <Textarea
-                    name="physicalAddress"
-                    value={formData.physicalAddress}
-                    onChange={handleInputChange}
-                    placeholder="Enter your physical address"
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Government ID</FormLabel>
-                  <Input
-                    name="governmentId"
-                    value={formData.governmentId}
-                    onChange={handleInputChange}
-                    placeholder="Enter your government ID number"
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>Career</FormLabel>
-                  <Textarea
-                    name="career"
-                    value={formData.career}
-                    onChange={handleInputChange}
-                    placeholder="Describe your career and experience"
-                  />
-                </FormControl>
-
-                <Button
-                  type="submit"
-                  colorScheme="blue"
-                  size="lg"
-                  width="full"
-                  isLoading={loading}
-                  loadingText="Registering..."
+              <FormControl isRequired>
+                <FormLabel>Gender</FormLabel>
+                <Select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  placeholder="Select gender"
                 >
-                  Register as Talent
-                </Button>
-              </VStack>
-            </form>
-          </VStack>
-        </Box>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </Select>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Birthday</FormLabel>
+                <Input
+                  name="birthday"
+                  type="date"
+                  value={formData.birthday}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Physical Address</FormLabel>
+                <Textarea
+                  name="physicalAddress"
+                  value={formData.physicalAddress}
+                  onChange={handleInputChange}
+                  placeholder="Enter your physical address"
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Government ID</FormLabel>
+                <Input
+                  name="governmentId"
+                  value={formData.governmentId}
+                  onChange={handleInputChange}
+                  placeholder="Enter your government ID number"
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Career</FormLabel>
+                <Textarea
+                  name="career"
+                  value={formData.career}
+                  onChange={handleInputChange}
+                  placeholder="Describe your career and experience"
+                />
+              </FormControl>
+
+              <Button
+                type="submit"
+                colorScheme="blue"
+                size="lg"
+                width="full"
+                isLoading={loading}
+                loadingText="Registering..."
+              >
+                Register as Talent
+              </Button>
+            </VStack>
+          </form>
+        </VStack>
       </Container>
     </Box>
   );

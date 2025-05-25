@@ -42,6 +42,7 @@ export default function Home() {
         });
         setAccount(accounts[0]);
         setIsConnected(true);
+        localStorage.setItem('walletConnected', 'true');
       } else {
         alert('Please install MetaMask!');
       }
@@ -53,6 +54,7 @@ export default function Home() {
   const disconnectWallet = () => {
     setAccount('');
     setIsConnected(false);
+    localStorage.removeItem('walletConnected');
   };
 
   useEffect(() => {
@@ -63,6 +65,14 @@ export default function Home() {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
           setIsConnected(true);
+          localStorage.setItem('walletConnected', 'true');
+        } else {
+          const wasConnected = localStorage.getItem('walletConnected');
+          if (!wasConnected) {
+            setAccount('');
+            setIsConnected(false);
+            localStorage.removeItem('walletConnected');
+          }
         }
       }
     };

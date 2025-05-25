@@ -133,11 +133,12 @@ export default function Navigation() {
 
   const disconnectWallet = async () => {
     try {
-      if (window.ethereum) {
-        setAccount('');
-        setHasProfile(false);
+      setAccount('');
+      setHasProfile(false);
+      localStorage.removeItem('walletConnected');
+      router.push('/').then(() => {
         window.location.reload();
-      }
+      });
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
     }
