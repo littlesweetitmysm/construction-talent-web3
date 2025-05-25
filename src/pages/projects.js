@@ -197,7 +197,7 @@ const Projects = () => {
               leftIcon={<AddIcon />}
               colorScheme="blue"
               size="lg"
-              onClick={onOpen}
+              onClick={() => router.push('/post-project')}
             >
               Post New Project
             </Button>
