@@ -11,11 +11,9 @@ import {
   IconButton,
   useColorModeValue,
   Text,
-  Link as ChakraLink,
 } from '@chakra-ui/react';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import Logo from './Logo';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
@@ -26,32 +24,37 @@ const Links = [
   { name: 'Talents', href: '/talents' },
 ];
 
-const NavLink = ({ children, href }) => (
-  <Link href={href} passHref>
-    <ChakraLink
+const NavLink = ({ children, href }) => {
+  const router = useRouter();
+  return (
+    <Box
+      as="button"
       px={2}
       py={1}
       rounded={'md'}
+      onClick={() => router.push(href)}
       _hover={{
         textDecoration: 'none',
         bg: useColorModeValue('gray.200', 'gray.700'),
       }}
     >
       {children}
-    </ChakraLink>
-  </Link>
-);
+    </Box>
+  );
+};
 
 export default function Navigation() {
   const [account, setAccount] = useState('');
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const bgColor = useColorModeValue('white', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
+    setIsMounted(true);
     checkConnection();
     window.ethereum?.on('accountsChanged', handleAccountsChanged);
     window.ethereum?.on('chainChanged', () => window.location.reload());
@@ -131,17 +134,18 @@ export default function Navigation() {
   const disconnectWallet = async () => {
     try {
       if (window.ethereum) {
-        // Clear local state
         setAccount('');
         setHasProfile(false);
-        
-        // Reload the page to reset MetaMask connection
         window.location.reload();
       }
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
     }
   };
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <Box 
