@@ -96,9 +96,43 @@ export default function RegisterTalent() {
   const bgColor = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const gradientBg = useColorModeValue(
+    'linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9))',
+    'linear-gradient(to bottom, rgba(26, 32, 44, 0.8), rgba(26, 32, 44, 0.9))'
+  );
+  const bgImage = useColorModeValue(
+    "url('/images/construction-day.jpg')",
+    "url('/images/construction-night.jpg')"
+  );
 
   return (
-    <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.900')}>
+    <Box
+      minH="100vh"
+      position="relative"
+      _before={{
+        content: '""',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bgImage: bgImage,
+        bgSize: 'cover',
+        bgPosition: 'center',
+        bgRepeat: 'no-repeat',
+        zIndex: -2,
+      }}
+      _after={{
+        content: '""',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bg: gradientBg,
+        zIndex: -1,
+      }}
+    >
       <Navigation />
       <Container maxW="container.md" pt={20}>
         <VStack
@@ -109,6 +143,11 @@ export default function RegisterTalent() {
           boxShadow="xl"
           borderWidth="1px"
           borderColor={borderColor}
+          backdropFilter="blur(10px)"
+          backgroundColor={useColorModeValue(
+            'rgba(255, 255, 255, 0.9)',
+            'rgba(26, 32, 44, 0.9)'
+          )}
         >
           <Heading size="xl" textAlign="center" color={useColorModeValue('blue.600', 'blue.400')}>
             Register as a Talent
