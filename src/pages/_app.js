@@ -40,7 +40,7 @@ function MyApp({ Component, pageProps }) {
           bottom: 0,
           bgGradient: useColorModeValue(
             'linear(to-br, rgba(255, 255, 255, 0.85), rgba(200, 220, 255, 0.85))',
-            'linear(to-br, rgba(0, 0, 0, 0.95), rgba(10, 10, 30, 0.98))'
+            'linear(to-br, rgba(0, 0, 0, 0.98), rgba(10, 10, 30, 0.99))'
           ),
           zIndex: -1,
         }}

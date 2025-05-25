@@ -61,6 +61,9 @@ const Projects = () => {
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const modalBg = useColorModeValue('white', 'gray.800');
+  const modalBorderColor = useColorModeValue('gray.200', 'gray.600');
+  const inputBg = useColorModeValue('white', 'gray.700');
+  const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   const router = useRouter();
 
@@ -291,9 +294,9 @@ const Projects = () => {
       {/* Post Project Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
-        <ModalContent bg={modalBg}>
+        <ModalContent bg={modalBg} borderWidth="1px" borderColor={modalBorderColor}>
           <ModalHeader color={textColor}>Post New Project</ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color={textColor} />
           <ModalBody>
             <VStack spacing={4}>
               <FormControl isRequired>
@@ -303,6 +306,10 @@ const Projects = () => {
                   value={newProject.title}
                   onChange={handleNewProjectChange}
                   placeholder="Enter project title"
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
+                  _hover={{ borderColor: 'blue.400' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
                 />
               </FormControl>
 
@@ -313,6 +320,10 @@ const Projects = () => {
                   value={newProject.description}
                   onChange={handleNewProjectChange}
                   placeholder="Enter project description"
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
+                  _hover={{ borderColor: 'blue.400' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
                 />
               </FormControl>
 
@@ -323,6 +334,10 @@ const Projects = () => {
                   value={newProject.type}
                   onChange={handleNewProjectChange}
                   placeholder="Select project type"
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
+                  _hover={{ borderColor: 'blue.400' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
                 >
                   <option value="residential">Residential</option>
                   <option value="commercial">Commercial</option>
@@ -339,6 +354,10 @@ const Projects = () => {
                     value={newProject.budget}
                     onChange={handleNewProjectChange}
                     placeholder="Enter budget in ETH"
+                    bg={inputBg}
+                    borderColor={inputBorderColor}
+                    _hover={{ borderColor: 'blue.400' }}
+                    _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
                   />
                 </NumberInput>
               </FormControl>
@@ -350,13 +369,17 @@ const Projects = () => {
                   type="date"
                   value={newProject.deadline}
                   onChange={handleNewProjectChange}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
+                  _hover={{ borderColor: 'blue.400' }}
+                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
                 />
               </FormControl>
             </VStack>
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={onClose} color={textColor}>
               Cancel
             </Button>
             <Button colorScheme="blue" onClick={handleSubmitProject}>
