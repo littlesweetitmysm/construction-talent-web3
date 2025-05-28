@@ -96,13 +96,16 @@ export default function RegisterTalent() {
   const bgColor = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const gradientBg = useColorModeValue(
-    'linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9))',
-    'linear-gradient(to bottom, rgba(26, 32, 44, 0.8), rgba(26, 32, 44, 0.9))'
-  );
+  const inputBg = useColorModeValue('white', 'gray.700');
+  const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
+
   const bgImage = useColorModeValue(
     "url('/images/construction-day.jpg')",
     "url('/images/construction-night.jpg')"
+  );
+  const gradientBg = useColorModeValue(
+    'linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9))',
+    'linear-gradient(to bottom, rgba(26, 32, 44, 0.8), rgba(26, 32, 44, 0.9))'
   );
 
   return (
@@ -165,8 +168,8 @@ export default function RegisterTalent() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Enter your full name"
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 />
               </FormControl>
 
@@ -177,8 +180,8 @@ export default function RegisterTalent() {
                   value={formData.gender}
                   onChange={handleInputChange}
                   placeholder="Select gender"
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -193,8 +196,8 @@ export default function RegisterTalent() {
                   type="date"
                   value={formData.birthday}
                   onChange={handleInputChange}
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 />
               </FormControl>
 
@@ -205,8 +208,8 @@ export default function RegisterTalent() {
                   value={formData.physicalAddress}
                   onChange={handleInputChange}
                   placeholder="Enter your physical address"
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 />
               </FormControl>
 
@@ -217,8 +220,8 @@ export default function RegisterTalent() {
                   value={formData.governmentId}
                   onChange={handleInputChange}
                   placeholder="Enter your government ID number"
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 />
               </FormControl>
 
@@ -229,8 +232,8 @@ export default function RegisterTalent() {
                   value={formData.career}
                   onChange={handleInputChange}
                   placeholder="Enter your career or profession"
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 />
               </FormControl>
 
@@ -241,8 +244,8 @@ export default function RegisterTalent() {
                   value={formData.certifications}
                   onChange={handleInputChange}
                   placeholder="List your relevant certifications"
-                  bg={useColorModeValue('white', 'gray.700')}
-                  borderColor={borderColor}
+                  bg={inputBg}
+                  borderColor={inputBorderColor}
                 />
               </FormControl>
 
