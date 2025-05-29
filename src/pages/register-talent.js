@@ -99,8 +99,36 @@ export default function RegisterTalent() {
   const inputBg = useColorModeValue('white', 'gray.700');
   const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
 
+  // Overlay logic
+  const overlay = useColorModeValue(
+    'linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(255,255,255,0.85))',
+    'linear-gradient(to bottom, rgba(10,10,30,0.85), rgba(0,0,0,0.92))'
+  );
+  const bgImage = useColorModeValue(
+    "url('/images/construction-day.jpg')",
+    "url('/images/construction-night.jpg')"
+  );
+
   return (
-    <Box minH="100vh">
+    <Box
+      minH="100vh"
+      position="relative"
+      bgImage={bgImage}
+      bgSize="cover"
+      bgPosition="center"
+      bgRepeat="no-repeat"
+      _after={{
+        content: '""',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bg: overlay,
+        zIndex: -1,
+        pointerEvents: 'none',
+      }}
+    >
       <Navigation />
       <Container maxW="container.md" pt={20} pb={10}>
         <VStack spacing={8} align="stretch">
