@@ -13,6 +13,12 @@ function MyApp({ Component, pageProps }) {
     }
   `;
 
+  // Use theme-aware background image
+  const backgroundImage = useColorModeValue(
+    "url('/images/construction-day.jpg')",
+    "url('/images/construction-night.jpg')"
+  );
+
   return (
     <ChakraProvider theme={theme}>
       <Global styles={GlobalStyles} />
@@ -26,7 +32,7 @@ function MyApp({ Component, pageProps }) {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundImage: "url('/images/cityscape-bg.jpg')",
+          backgroundImage: backgroundImage,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           zIndex: -2,
