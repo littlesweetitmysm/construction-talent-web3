@@ -105,8 +105,8 @@ export default function RegisterTalent() {
     'linear-gradient(to bottom, rgba(10,10,30,0.85), rgba(0,0,0,0.92))'
   );
   const bgImage = useColorModeValue(
-    "url('/images/construction-day.jpg')",
-    "url('/images/construction-night.jpg')"
+    "url('/images/cityscape-bg.jpg')",
+    "url('/images/cityscape-bg.jpg')"
   );
 
   return (

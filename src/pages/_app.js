@@ -13,10 +13,12 @@ function MyApp({ Component, pageProps }) {
     }
   `;
 
-  // Use theme-aware background image
-  const backgroundImage = useColorModeValue(
-    "url('/images/construction-day.jpg')",
-    "url('/images/construction-night.jpg')"
+  // Always use the same image
+  const backgroundImage = "url('/images/cityscape-bg.jpg')";
+  // Overlay: light in light mode, dark in dark mode
+  const overlay = useColorModeValue(
+    'linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(255,255,255,0.85))',
+    'linear-gradient(to bottom, rgba(10,10,30,0.85), rgba(0,0,0,0.92))'
   );
 
   return (
@@ -44,10 +46,7 @@ function MyApp({ Component, pageProps }) {
           left: 0,
           right: 0,
           bottom: 0,
-          bgGradient: useColorModeValue(
-            'linear(to-br, rgba(255, 255, 255, 0.85), rgba(200, 220, 255, 0.85))',
-            'linear(to-br, rgba(0, 0, 0, 0.98), rgba(10, 10, 30, 0.99))'
-          ),
+          bg: overlay,
           zIndex: -1,
         }}
       >
