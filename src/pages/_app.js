@@ -1,4 +1,4 @@
-import { ChakraProvider, Box, useColorModeValue } from '@chakra-ui/react';
+import { ChakraProvider, Box, useColorModeValue, useColorMode } from '@chakra-ui/react';
 import { Global, css } from '@emotion/react';
 import theme from '../theme';
 import ThemeToggle from '../components/ThemeToggle';
@@ -21,6 +21,7 @@ function MyApp({ Component, pageProps }) {
     'linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(255,255,255,0.85))',
     'linear-gradient(to bottom, rgba(10,10,30,0.85), rgba(0,0,0,0.92))'
   );
+  const { colorMode } = useColorMode();
 
   // Debug print in browser
   useEffect(() => {
@@ -31,6 +32,7 @@ function MyApp({ Component, pageProps }) {
     <ChakraProvider theme={theme}>
       <Global styles={GlobalStyles} />
       <Box
+        key={colorMode}
         minH="100vh"
         position="relative"
         _before={{
