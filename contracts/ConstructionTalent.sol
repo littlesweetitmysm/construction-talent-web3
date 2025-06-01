@@ -7,10 +7,13 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract ConstructionTalent is Ownable, ReentrancyGuard {
     struct Talent {
         string name;
-        string skills;
-        uint256 experience;
+        string gender;
+        string birthday;
+        string physicalAddress;
+        string governmentId;
+        string career;
+        string[] certifications;
         bool isVerified;
-        uint256[] certifications;
         uint256 rating;
         uint256 projectCount;
     }
@@ -21,7 +24,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
         uint256 budget;
         address client;
         bool isActive;
-        uint256[] requiredSkills;
+        string[] requiredSkills;
         uint256 deadline;
     }
 
@@ -38,18 +41,29 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
 
     function registerTalent(
         string memory _name,
-        string memory _skills,
-        uint256 _experience
+        string memory _gender,
+        string memory _birthday,
+        string memory _physicalAddress,
+        string memory _governmentId,
+        string memory _career,
+        string[] memory _certifications
     ) external {
         require(bytes(_name).length > 0, "Name cannot be empty");
-        require(bytes(_skills).length > 0, "Skills cannot be empty");
-        
+        require(bytes(_gender).length > 0, "Gender cannot be empty");
+        require(bytes(_birthday).length > 0, "Birthday cannot be empty");
+        require(bytes(_physicalAddress).length > 0, "Physical address cannot be empty");
+        require(bytes(_governmentId).length > 0, "Government ID cannot be empty");
+        require(bytes(_career).length > 0, "Career cannot be empty");
+
         talents[msg.sender] = Talent({
             name: _name,
-            skills: _skills,
-            experience: _experience,
+            gender: _gender,
+            birthday: _birthday,
+            physicalAddress: _physicalAddress,
+            governmentId: _governmentId,
+            career: _career,
+            certifications: _certifications,
             isVerified: false,
-            certifications: new uint256[](0),
             rating: 0,
             projectCount: 0
         });
@@ -61,7 +75,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
         string memory _title,
         string memory _description,
         uint256 _budget,
-        uint256[] memory _requiredSkills,
+        string[] memory _requiredSkills,
         uint256 _deadline
     ) external {
         require(bytes(_title).length > 0, "Title cannot be empty");
@@ -84,7 +98,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
     }
 
     function verifyTalent(address _talent) external onlyOwner {
-        require(talents[_talent].experience > 0, "Talent not registered");
+        require(bytes(talents[_talent].name).length > 0, "Talent not registered");
         talents[_talent].isVerified = true;
         emit TalentVerified(_talent);
     }
@@ -102,17 +116,25 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
 
     function getTalentInfo(address _talent) external view returns (
         string memory name,
-        string memory skills,
-        uint256 experience,
+        string memory gender,
+        string memory birthday,
+        string memory physicalAddress,
+        string memory governmentId,
+        string memory career,
+        string[] memory certifications,
         bool isVerified,
         uint256 rating,
-        uint256 projectCount
+        uint256 projectCount_
     ) {
         Talent storage talent = talents[_talent];
         return (
             talent.name,
-            talent.skills,
-            talent.experience,
+            talent.gender,
+            talent.birthday,
+            talent.physicalAddress,
+            talent.governmentId,
+            talent.career,
+            talent.certifications,
             talent.isVerified,
             talent.rating,
             talent.projectCount
@@ -125,7 +147,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
         uint256 budget,
         address client,
         bool isActive,
-        uint256 deadline
+        uint256 deadline_
     ) {
         Project storage project = projects[_projectId];
         return (
