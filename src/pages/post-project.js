@@ -28,6 +28,7 @@ const PostProject = () => {
     type: '',
     budget: '',
     deadline: '',
+    requiredSkills: '',
   });
 
   const router = useRouter();
@@ -60,11 +61,17 @@ const PostProject = () => {
         signer
       );
 
+      const requiredSkillsArray = project.requiredSkills
+        .split(',')
+        .map(skill => skill.trim())
+        .filter(skill => skill.length > 0);
+
       const tx = await contract.createProject(
         project.title,
         project.description,
         project.type,
         ethers.utils.parseEther(project.budget),
+        requiredSkillsArray,
         Math.floor(new Date(project.deadline).getTime() / 1000)
       );
 
@@ -183,6 +190,20 @@ const PostProject = () => {
                     type="date"
                     value={project.deadline}
                     onChange={handleChange}
+                    bg={inputBg}
+                    borderColor={inputBorderColor}
+                    _hover={{ borderColor: 'blue.400' }}
+                    _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
+                  />
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel color={textColor}>Required Skills (comma separated)</FormLabel>
+                  <Input
+                    name="requiredSkills"
+                    value={project.requiredSkills}
+                    onChange={handleChange}
+                    placeholder="e.g. Plumbing, Electrical, Carpentry"
                     bg={inputBg}
                     borderColor={inputBorderColor}
                     _hover={{ borderColor: 'blue.400' }}

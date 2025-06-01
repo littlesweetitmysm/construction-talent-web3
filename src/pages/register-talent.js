@@ -58,6 +58,12 @@ export default function RegisterTalent() {
         signer
       );
 
+      // Convert certifications to string[]
+      const certificationsArray = formData.certifications
+        .split(',')
+        .map(cert => cert.trim())
+        .filter(cert => cert.length > 0);
+
       const tx = await contract.registerTalent(
         formData.name,
         formData.gender,
@@ -65,7 +71,7 @@ export default function RegisterTalent() {
         formData.physicalAddress,
         formData.governmentId,
         formData.career,
-        formData.certifications
+        certificationsArray
       );
 
       await tx.wait();
@@ -198,12 +204,12 @@ export default function RegisterTalent() {
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel>Certifications</FormLabel>
+                  <FormLabel>Certifications (comma separated)</FormLabel>
                   <Textarea
                     name="certifications"
                     value={formData.certifications}
                     onChange={handleInputChange}
-                    placeholder="List your relevant certifications"
+                    placeholder="e.g. OSHA, PMP, LEED"
                     bg={inputBg}
                     borderColor={inputBorderColor}
                   />
