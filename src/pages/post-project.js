@@ -25,7 +25,6 @@ const PostProject = () => {
   const [project, setProject] = useState({
     title: '',
     description: '',
-    type: '',
     budget: '',
     deadline: '',
     requiredSkills: '',
@@ -69,7 +68,6 @@ const PostProject = () => {
       const tx = await contract.createProject(
         project.title,
         project.description,
-        project.type,
         ethers.utils.parseEther(project.budget),
         requiredSkillsArray,
         Math.floor(new Date(project.deadline).getTime() / 1000)
@@ -146,25 +144,6 @@ const PostProject = () => {
                     _hover={{ borderColor: 'blue.400' }}
                     _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
                   />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel color={textColor}>Project Type</FormLabel>
-                  <Select
-                    name="type"
-                    value={project.type}
-                    onChange={handleChange}
-                    placeholder="Select project type"
-                    bg={inputBg}
-                    borderColor={inputBorderColor}
-                    _hover={{ borderColor: 'blue.400' }}
-                    _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
-                  >
-                    <option value="residential">Residential</option>
-                    <option value="commercial">Commercial</option>
-                    <option value="industrial">Industrial</option>
-                    <option value="infrastructure">Infrastructure</option>
-                  </Select>
                 </FormControl>
 
                 <FormControl isRequired>
