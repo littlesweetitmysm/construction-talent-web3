@@ -211,6 +211,37 @@ const Talents = () => {
       'Mason': 'gray',
       'Welder': 'red',
       'Painter': 'purple',
+      'HVAC Technician': 'cyan',
+      'Roofing Specialist': 'brown',
+      'Flooring Installer': 'teal',
+      'Concrete Worker': 'slate',
+      'Heavy Equipment Operator': 'green',
+      'Safety Inspector': 'red',
+      'Project Manager': 'blue',
+      'Architect': 'purple',
+      'Civil Engineer': 'blue',
+      'Structural Engineer': 'blue',
+      'Mechanical Engineer': 'blue',
+      'Electrical Engineer': 'blue',
+      'Landscaper': 'green',
+      'Demolition Specialist': 'red',
+      'Scaffolding Specialist': 'orange',
+      'Glass Installer': 'cyan',
+      'Insulation Specialist': 'yellow',
+      'Drywall Installer': 'gray',
+      'Tile Setter': 'teal',
+      'Cabinet Maker': 'brown',
+      'Millwright': 'orange',
+      'Ironworker': 'red',
+      'Sheet Metal Worker': 'gray',
+      'Pipefitter': 'blue',
+      'Boilermaker': 'red',
+      'Crane Operator': 'green',
+      'Surveyor': 'blue',
+      'Quality Control Inspector': 'green',
+      'Estimator': 'blue',
+      'Supervisor': 'blue',
+      'Other': 'gray',
     };
     return colors[career] || 'green';
   };
@@ -233,13 +264,6 @@ const Talents = () => {
         <VStack spacing={8} align="stretch">
           <HStack justify="space-between" align="center">
             <Heading size="xl" color={textColor}>Construction Talents</Heading>
-            <Button
-              colorScheme="blue"
-              size="lg"
-              onClick={() => router.push('/register')}
-            >
-              Register as Talent
-            </Button>
           </HStack>
 
           {/* Search and Filters */}
@@ -269,6 +293,37 @@ const Talents = () => {
                   <option value="Mason">Mason</option>
                   <option value="Welder">Welder</option>
                   <option value="Painter">Painter</option>
+                  <option value="HVAC Technician">HVAC Technician</option>
+                  <option value="Roofing Specialist">Roofing Specialist</option>
+                  <option value="Flooring Installer">Flooring Installer</option>
+                  <option value="Concrete Worker">Concrete Worker</option>
+                  <option value="Heavy Equipment Operator">Heavy Equipment Operator</option>
+                  <option value="Safety Inspector">Safety Inspector</option>
+                  <option value="Project Manager">Project Manager</option>
+                  <option value="Architect">Architect</option>
+                  <option value="Civil Engineer">Civil Engineer</option>
+                  <option value="Structural Engineer">Structural Engineer</option>
+                  <option value="Mechanical Engineer">Mechanical Engineer</option>
+                  <option value="Electrical Engineer">Electrical Engineer</option>
+                  <option value="Landscaper">Landscaper</option>
+                  <option value="Demolition Specialist">Demolition Specialist</option>
+                  <option value="Scaffolding Specialist">Scaffolding Specialist</option>
+                  <option value="Glass Installer">Glass Installer</option>
+                  <option value="Insulation Specialist">Insulation Specialist</option>
+                  <option value="Drywall Installer">Drywall Installer</option>
+                  <option value="Tile Setter">Tile Setter</option>
+                  <option value="Cabinet Maker">Cabinet Maker</option>
+                  <option value="Millwright">Millwright</option>
+                  <option value="Ironworker">Ironworker</option>
+                  <option value="Sheet Metal Worker">Sheet Metal Worker</option>
+                  <option value="Pipefitter">Pipefitter</option>
+                  <option value="Boilermaker">Boilermaker</option>
+                  <option value="Crane Operator">Crane Operator</option>
+                  <option value="Surveyor">Surveyor</option>
+                  <option value="Quality Control Inspector">Quality Control Inspector</option>
+                  <option value="Estimator">Estimator</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Other">Other</option>
                 </Select>
 
                 <Select

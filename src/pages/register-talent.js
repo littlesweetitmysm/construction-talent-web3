@@ -193,14 +193,52 @@ export default function RegisterTalent() {
 
                 <FormControl isRequired>
                   <FormLabel>Career/Profession</FormLabel>
-                  <Input
+                  <Select
                     name="career"
                     value={formData.career}
                     onChange={handleInputChange}
-                    placeholder="Enter your career or profession"
+                    placeholder="Select your career or profession"
                     bg={inputBg}
                     borderColor={inputBorderColor}
-                  />
+                  >
+                    <option value="Carpenter">Carpenter</option>
+                    <option value="Electrician">Electrician</option>
+                    <option value="Plumber">Plumber</option>
+                    <option value="Mason">Mason</option>
+                    <option value="Welder">Welder</option>
+                    <option value="Painter">Painter</option>
+                    <option value="HVAC Technician">HVAC Technician</option>
+                    <option value="Roofing Specialist">Roofing Specialist</option>
+                    <option value="Flooring Installer">Flooring Installer</option>
+                    <option value="Concrete Worker">Concrete Worker</option>
+                    <option value="Heavy Equipment Operator">Heavy Equipment Operator</option>
+                    <option value="Safety Inspector">Safety Inspector</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="Architect">Architect</option>
+                    <option value="Civil Engineer">Civil Engineer</option>
+                    <option value="Structural Engineer">Structural Engineer</option>
+                    <option value="Mechanical Engineer">Mechanical Engineer</option>
+                    <option value="Electrical Engineer">Electrical Engineer</option>
+                    <option value="Landscaper">Landscaper</option>
+                    <option value="Demolition Specialist">Demolition Specialist</option>
+                    <option value="Scaffolding Specialist">Scaffolding Specialist</option>
+                    <option value="Glass Installer">Glass Installer</option>
+                    <option value="Insulation Specialist">Insulation Specialist</option>
+                    <option value="Drywall Installer">Drywall Installer</option>
+                    <option value="Tile Setter">Tile Setter</option>
+                    <option value="Cabinet Maker">Cabinet Maker</option>
+                    <option value="Millwright">Millwright</option>
+                    <option value="Ironworker">Ironworker</option>
+                    <option value="Sheet Metal Worker">Sheet Metal Worker</option>
+                    <option value="Pipefitter">Pipefitter</option>
+                    <option value="Boilermaker">Boilermaker</option>
+                    <option value="Crane Operator">Crane Operator</option>
+                    <option value="Surveyor">Surveyor</option>
+                    <option value="Quality Control Inspector">Quality Control Inspector</option>
+                    <option value="Estimator">Estimator</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Other">Other</option>
+                  </Select>
                 </FormControl>
 
                 <FormControl isRequired>
