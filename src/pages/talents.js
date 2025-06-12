@@ -4,155 +4,457 @@ import {
   Container,
   Heading,
   SimpleGrid,
-  Text,
-  Button,
-  useDisclosure,
-  VStack,
+  Input,
+  Select,
   HStack,
+  VStack,
+  Text,
   Badge,
-  useToast,
+  InputGroup,
+  InputLeftElement,
+  Card,
+  CardBody,
+  Stack,
+  Divider,
+  Button,
+  useColorModeValue,
   Avatar,
-  Progress,
+  AvatarGroup,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react';
-import { getTalentInfo } from '../utils/contract';
-import TalentRegistration from '../components/TalentRegistration';
+import { SearchIcon, StarIcon, CheckCircleIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
+import { ethers } from 'ethers';
+import ConstructionTalent from '../contracts/ConstructionTalent.json';
+import { useRouter } from 'next/router';
 
-const Talents = ({ provider, signer }) => {
+const Talents = () => {
   const [talents, setTalents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [filteredTalents, setFilteredTalents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    career: '',
+    verification: '',
+    rating: '',
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedTalent, setSelectedTalent] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const toast = useToast();
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const modalBg = useColorModeValue('white', 'gray.800');
+  const modalBorderColor = useColorModeValue('gray.200', 'gray.600');
+
+  const router = useRouter();
 
   useEffect(() => {
-    const loadTalents = async () => {
-      try {
-        // In a real application, you would fetch the list of registered talents
-        // For this example, we'll use some sample addresses
-        const sampleAddresses = [
-          '0x1234567890123456789012345678901234567890',
-          '0x2345678901234567890123456789012345678901',
-          '0x3456789012345678901234567890123456789012',
-        ];
+    fetchTalents();
+  }, []);
 
-        const talentPromises = sampleAddresses.map(address =>
-          getTalentInfo(provider, address)
-        );
-        const talentResults = await Promise.all(talentPromises);
-        setTalents(talentResults.filter(talent => talent.name)); // Filter out empty profiles
-      } catch (error) {
-        console.error('Error loading talents:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load talents',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  useEffect(() => {
+    filterTalents();
+  }, [searchTerm, filters, talents]);
 
-    if (provider) {
-      loadTalents();
+  const fetchTalents = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+        ConstructionTalent.abi,
+        provider
+      );
+
+      // For now, we'll use a mock approach since the contract doesn't have a talent count
+      // In a real implementation, you'd want to add a talentCount to the contract
+      const mockTalents = [
+        {
+          address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+          name: 'John Smith',
+          gender: 'Male',
+          birthday: '1990-05-15',
+          career: 'Carpenter',
+          certifications: ['OSHA Safety', 'Advanced Carpentry', 'Blueprint Reading'],
+          isVerified: true,
+          rating: 4.8,
+          projectCount: 12,
+        },
+        {
+          address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+          name: 'Sarah Johnson',
+          gender: 'Female',
+          birthday: '1985-08-22',
+          career: 'Electrician',
+          certifications: ['Licensed Electrician', 'Solar Installation', 'Smart Home Systems'],
+          isVerified: true,
+          rating: 4.9,
+          projectCount: 8,
+        },
+        {
+          address: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+          name: 'Mike Rodriguez',
+          gender: 'Male',
+          birthday: '1988-12-10',
+          career: 'Plumber',
+          certifications: ['Master Plumber', 'Gas Fitting', 'Water Treatment'],
+          isVerified: false,
+          rating: 4.2,
+          projectCount: 5,
+        },
+        {
+          address: '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
+          name: 'Emily Chen',
+          gender: 'Female',
+          birthday: '1992-03-28',
+          career: 'Mason',
+          certifications: ['Stone Masonry', 'Concrete Work', 'Tile Installation'],
+          isVerified: true,
+          rating: 4.7,
+          projectCount: 15,
+        },
+        {
+          address: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+          name: 'David Wilson',
+          gender: 'Male',
+          birthday: '1983-11-05',
+          career: 'Welder',
+          certifications: ['Certified Welder', 'Structural Steel', 'Pipe Welding'],
+          isVerified: true,
+          rating: 4.6,
+          projectCount: 20,
+        },
+        {
+          address: '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc',
+          name: 'Lisa Thompson',
+          gender: 'Female',
+          birthday: '1995-07-14',
+          career: 'Painter',
+          certifications: ['Interior Painting', 'Exterior Painting', 'Color Consultation'],
+          isVerified: false,
+          rating: 4.1,
+          projectCount: 3,
+        },
+      ];
+
+      setTalents(mockTalents);
+      setFilteredTalents(mockTalents);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching talents:', error);
+      setIsLoading(false);
     }
-  }, [provider]);
-
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase();
   };
 
+  const filterTalents = () => {
+    let filtered = [...talents];
+
+    // Search term filter
+    if (searchTerm) {
+      filtered = filtered.filter(talent =>
+        talent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        talent.career.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        talent.certifications.some(cert => 
+          cert.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+
+    // Career filter
+    if (filters.career) {
+      filtered = filtered.filter(talent => talent.career === filters.career);
+    }
+
+    // Verification filter
+    if (filters.verification) {
+      const isVerified = filters.verification === 'verified';
+      filtered = filtered.filter(talent => talent.isVerified === isVerified);
+    }
+
+    // Rating filter
+    if (filters.rating) {
+      const [min, max] = filters.rating.split('-').map(Number);
+      filtered = filtered.filter(talent => {
+        const rating = talent.rating;
+        return rating >= min && rating <= max;
+      });
+    }
+
+    setFilteredTalents(filtered);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleViewTalent = (talent) => {
+    setSelectedTalent(talent);
+    onOpen();
+  };
+
+  const getCareerColor = (career) => {
+    const colors = {
+      'Carpenter': 'orange',
+      'Electrician': 'yellow',
+      'Plumber': 'blue',
+      'Mason': 'gray',
+      'Welder': 'red',
+      'Painter': 'purple',
+    };
+    return colors[career] || 'green';
+  };
+
+  if (isLoading) {
+    return (
+      <Box minH="100vh">
+        <Navigation />
+        <Container maxW="container.xl" pt={20} pb={10}>
+          <Text>Loading talents...</Text>
+        </Container>
+      </Box>
+    );
+  }
+
   return (
-    <>
+    <Box minH="100vh">
       <Navigation />
       <Container maxW="container.xl" pt={20} pb={10}>
         <VStack spacing={8} align="stretch">
-          <HStack justify="space-between">
-            <Heading as="h1" size="xl">
-              Available Talents
-            </Heading>
-            <Button colorScheme="blue" onClick={onOpen}>
+          <HStack justify="space-between" align="center">
+            <Heading size="xl" color={textColor}>Construction Talents</Heading>
+            <Button
+              colorScheme="blue"
+              size="lg"
+              onClick={() => router.push('/register')}
+            >
               Register as Talent
             </Button>
           </HStack>
 
-          {loading ? (
-            <Text>Loading talents...</Text>
-          ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-              {talents.map((talent, index) => (
-                <Box
-                  key={index}
-                  p={6}
-                  borderWidth={1}
-                  borderRadius="lg"
-                  boxShadow="lg"
-                  _hover={{ transform: 'translateY(-2px)', transition: 'all 0.2s' }}
+          {/* Search and Filters */}
+          <Box p={6} bg={cardBg} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+            <VStack spacing={4}>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none">
+                  <SearchIcon color="gray.500" />
+                </InputLeftElement>
+                <Input
+                  placeholder="Search talents by name, career, or certifications..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </InputGroup>
+
+              <HStack spacing={4} width="full">
+                <Select
+                  name="career"
+                  placeholder="Career Type"
+                  value={filters.career}
+                  onChange={handleFilterChange}
                 >
-                  <VStack align="stretch" spacing={4}>
-                    <HStack spacing={4}>
-                      <Avatar
-                        name={talent.name}
-                        size="lg"
-                        bg="blue.500"
-                        color="white"
-                      >
-                        {getInitials(talent.name)}
-                      </Avatar>
+                  <option value="Carpenter">Carpenter</option>
+                  <option value="Electrician">Electrician</option>
+                  <option value="Plumber">Plumber</option>
+                  <option value="Mason">Mason</option>
+                  <option value="Welder">Welder</option>
+                  <option value="Painter">Painter</option>
+                </Select>
+
+                <Select
+                  name="verification"
+                  placeholder="Verification Status"
+                  value={filters.verification}
+                  onChange={handleFilterChange}
+                >
+                  <option value="verified">Verified</option>
+                  <option value="unverified">Unverified</option>
+                </Select>
+
+                <Select
+                  name="rating"
+                  placeholder="Rating Range"
+                  value={filters.rating}
+                  onChange={handleFilterChange}
+                >
+                  <option value="4.5-5.0">4.5 - 5.0 Stars</option>
+                  <option value="4.0-4.5">4.0 - 4.5 Stars</option>
+                  <option value="3.5-4.0">3.5 - 4.0 Stars</option>
+                  <option value="3.0-3.5">3.0 - 3.5 Stars</option>
+                </Select>
+              </HStack>
+            </VStack>
+          </Box>
+
+          {/* Talents Grid */}
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            {filteredTalents.map((talent) => (
+              <Card key={talent.address} bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                <CardBody>
+                  <Stack spacing={4}>
+                    <HStack justify="space-between" align="start">
                       <VStack align="start" spacing={1}>
-                        <Heading as="h3" size="md">
-                          {talent.name}
-                        </Heading>
-                        <Badge colorScheme={talent.isVerified ? 'green' : 'yellow'}>
-                          {talent.isVerified ? 'Verified' : 'Pending Verification'}
-                        </Badge>
+                        <Heading size="md" color={textColor}>{talent.name}</Heading>
+                        <Text color="gray.500" fontSize="sm">
+                          {talent.gender} • {new Date(talent.birthday).getFullYear()}
+                        </Text>
                       </VStack>
+                      <Avatar size="sm" name={talent.name} />
                     </HStack>
 
-                    <Text color="gray.600">{talent.skills}</Text>
+                    <HStack>
+                      <Badge colorScheme={getCareerColor(talent.career)}>{talent.career}</Badge>
+                      {talent.isVerified ? (
+                        <Badge colorScheme="green" leftIcon={<CheckCircleIcon />}>
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Badge colorScheme="gray">Unverified</Badge>
+                      )}
+                    </HStack>
 
-                    <VStack align="stretch" spacing={2}>
-                      <Text fontSize="sm" color="gray.500">
-                        Experience: {talent.experience} years
+                    <HStack>
+                      <StarIcon color="yellow.400" />
+                      <Text color={textColor} fontWeight="bold">
+                        {talent.rating} ({talent.projectCount} projects)
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
-                        Projects Completed: {talent.projectCount}
+                    </HStack>
+
+                    <Divider />
+
+                    <VStack align="start" spacing={2}>
+                      <Text color={textColor} fontWeight="semibold" fontSize="sm">
+                        Certifications:
                       </Text>
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Rating: {talent.rating}/5
-                        </Text>
-                        <Progress
-                          value={talent.rating * 20}
-                          size="sm"
-                          colorScheme="blue"
-                          borderRadius="full"
-                        />
-                      </Box>
+                      <HStack flexWrap="wrap" spacing={1}>
+                        {talent.certifications.slice(0, 3).map((cert, index) => (
+                          <Badge key={index} size="sm" colorScheme="blue" variant="subtle">
+                            {cert}
+                          </Badge>
+                        ))}
+                        {talent.certifications.length > 3 && (
+                          <Badge size="sm" colorScheme="gray" variant="subtle">
+                            +{talent.certifications.length - 3} more
+                          </Badge>
+                        )}
+                      </HStack>
                     </VStack>
 
-                    <Button colorScheme="blue" size="sm">
+                    <Button 
+                      size="sm" 
+                      colorScheme="blue" 
+                      onClick={() => handleViewTalent(talent)}
+                      width="full"
+                    >
                       View Profile
                     </Button>
-                  </VStack>
-                </Box>
-              ))}
-            </SimpleGrid>
-          )}
+                  </Stack>
+                </CardBody>
+              </Card>
+            ))}
+          </SimpleGrid>
         </VStack>
       </Container>
 
-      <TalentRegistration
-        isOpen={isOpen}
-        onClose={onClose}
-        signer={signer}
-      />
-    </>
+      {/* Talent Detail Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent bg={modalBg} borderWidth="1px" borderColor={modalBorderColor}>
+          <ModalHeader color={textColor}>
+            {selectedTalent?.name} - {selectedTalent?.career}
+          </ModalHeader>
+          <ModalCloseButton color={textColor} />
+          <ModalBody>
+            {selectedTalent && (
+              <VStack spacing={4} align="stretch">
+                <HStack justify="space-between">
+                  <VStack align="start" spacing={1}>
+                    <Text color={textColor} fontWeight="bold" fontSize="lg">
+                      {selectedTalent.name}
+                    </Text>
+                    <Text color="gray.500">
+                      {selectedTalent.gender} • Born {selectedTalent.birthday}
+                    </Text>
+                  </VStack>
+                  <Avatar size="lg" name={selectedTalent.name} />
+                </HStack>
+
+                <HStack>
+                  <Badge colorScheme={getCareerColor(selectedTalent.career)} size="lg">
+                    {selectedTalent.career}
+                  </Badge>
+                  {selectedTalent.isVerified ? (
+                    <Badge colorScheme="green" size="lg">
+                      <CheckCircleIcon mr={1} />
+                      Verified Professional
+                    </Badge>
+                  ) : (
+                    <Badge colorScheme="gray" size="lg">
+                      Pending Verification
+                    </Badge>
+                  )}
+                </HStack>
+
+                <HStack>
+                  <StarIcon color="yellow.400" size="lg" />
+                  <Text color={textColor} fontWeight="bold" fontSize="lg">
+                    {selectedTalent.rating} Rating
+                  </Text>
+                  <Text color="gray.500">
+                    ({selectedTalent.projectCount} completed projects)
+                  </Text>
+                </HStack>
+
+                <Divider />
+
+                <VStack align="start" spacing={3}>
+                  <Text color={textColor} fontWeight="semibold" fontSize="lg">
+                    Certifications & Skills:
+                  </Text>
+                  <HStack flexWrap="wrap" spacing={2}>
+                    {selectedTalent.certifications.map((cert, index) => (
+                      <Badge key={index} colorScheme="blue" size="md">
+                        {cert}
+                      </Badge>
+                    ))}
+                  </HStack>
+                </VStack>
+
+                <Divider />
+
+                <VStack align="start" spacing={2}>
+                  <Text color={textColor} fontWeight="semibold">
+                    Contact Information:
+                  </Text>
+                  <Text color="gray.500" fontSize="sm">
+                    Address: {selectedTalent.address}
+                  </Text>
+                </VStack>
+              </VStack>
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose} color={textColor}>
+              Close
+            </Button>
+            <Button colorScheme="blue">
+              Contact Talent
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
 };
 
