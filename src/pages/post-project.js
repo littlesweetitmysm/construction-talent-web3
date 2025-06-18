@@ -149,8 +149,91 @@ const PostProject = () => {
     }));
   };
 
+  // Validation function to check if form is complete
+  const isFormValid = () => {
+    return (
+      project.title.trim() !== '' &&
+      project.description.trim() !== '' &&
+      project.budget && parseFloat(project.budget) > 0 &&
+      project.deadline &&
+      new Date(project.deadline) > new Date() &&
+      project.requiredSkills.length > 0
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!project.title.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Project title is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!project.description.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Project description is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!project.budget || parseFloat(project.budget) <= 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid budget greater than 0.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!project.deadline) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a project deadline.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Check if deadline is in the future
+    const deadlineDate = new Date(project.deadline);
+    const currentDate = new Date();
+    if (deadlineDate <= currentDate) {
+      toast({
+        title: 'Validation Error',
+        description: 'Deadline must be in the future.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!project.requiredSkills || project.requiredSkills.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select at least one required skill.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -163,8 +246,8 @@ const PostProject = () => {
       );
 
       const tx = await contract.createProject(
-        project.title,
-        project.description,
+        project.title.trim(),
+        project.description.trim(),
         ethers.utils.parseEther(project.budget),
         project.requiredSkills,
         Math.floor(new Date(project.deadline).getTime() / 1000)
@@ -340,6 +423,12 @@ const PostProject = () => {
                       ))}
                     </HStack>
                   )}
+                  
+                  {project.requiredSkills.length === 0 && (
+                    <Text fontSize="sm" color="gray.500" mt={2}>
+                      Please select at least one required skill for this project.
+                    </Text>
+                  )}
                 </FormControl>
 
                 <Button
@@ -349,6 +438,7 @@ const PostProject = () => {
                   width="full"
                   isLoading={isLoading}
                   loadingText="Creating Project..."
+                  isDisabled={!isFormValid()}
                 >
                   Post Project
                 </Button>
