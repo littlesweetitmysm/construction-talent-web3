@@ -123,6 +123,11 @@ const PostProject = () => {
     }
   }, [searchTerm, project.requiredSkills]);
 
+  // Debug validation state changes
+  useEffect(() => {
+    console.log('Form validation state:', isFormValid());
+  }, [project.title, project.description, project.budget, project.deadline, project.requiredSkills]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProject(prev => ({
@@ -151,14 +156,23 @@ const PostProject = () => {
 
   // Validation function to check if form is complete
   const isFormValid = () => {
-    return (
-      project.title.trim() !== '' &&
-      project.description.trim() !== '' &&
-      project.budget && parseFloat(project.budget) > 0 &&
-      project.deadline &&
-      new Date(project.deadline) > new Date() &&
-      project.requiredSkills.length > 0
-    );
+    const titleValid = project.title.trim() !== '';
+    const descriptionValid = project.description.trim() !== '';
+    const budgetValid = project.budget && parseFloat(project.budget) > 0;
+    const deadlineValid = project.deadline !== '';
+    const skillsValid = project.requiredSkills.length > 0;
+
+    // Debug logging
+    console.log('Validation check:', {
+      title: titleValid,
+      description: descriptionValid,
+      budget: budgetValid,
+      deadline: deadlineValid,
+      skills: skillsValid,
+      project: project
+    });
+
+    return titleValid && descriptionValid && budgetValid && deadlineValid && skillsValid;
   };
 
   const handleSubmit = async (e) => {
