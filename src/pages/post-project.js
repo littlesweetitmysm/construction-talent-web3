@@ -13,9 +13,19 @@ import {
   NumberInput,
   NumberInputField,
   useToast,
+  HStack,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  InputGroup,
+  InputLeftElement,
+  List,
+  ListItem,
+  Text,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { SearchIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
@@ -27,8 +37,12 @@ const PostProject = () => {
     description: '',
     budget: '',
     deadline: '',
-    requiredSkills: '',
+    requiredSkills: [],
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredSkills, setFilteredSkills] = useState([]);
+  const dropdownRef = useRef(null);
 
   const router = useRouter();
   const toast = useToast();
@@ -38,12 +52,100 @@ const PostProject = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const inputBg = useColorModeValue('white', 'gray.700');
   const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
+  const dropdownBg = useColorModeValue('white', 'gray.700');
+  const dropdownBorderColor = useColorModeValue('gray.200', 'gray.600');
+
+  // All career options
+  const careerOptions = [
+    'Carpenter',
+    'Electrician',
+    'Plumber',
+    'Mason',
+    'Welder',
+    'Painter',
+    'HVAC Technician',
+    'Roofing Specialist',
+    'Flooring Installer',
+    'Concrete Worker',
+    'Heavy Equipment Operator',
+    'Safety Inspector',
+    'Project Manager',
+    'Architect',
+    'Civil Engineer',
+    'Structural Engineer',
+    'Mechanical Engineer',
+    'Electrical Engineer',
+    'Landscaper',
+    'Demolition Specialist',
+    'Scaffolding Specialist',
+    'Glass Installer',
+    'Insulation Specialist',
+    'Drywall Installer',
+    'Tile Setter',
+    'Cabinet Maker',
+    'Millwright',
+    'Ironworker',
+    'Sheet Metal Worker',
+    'Pipefitter',
+    'Boilermaker',
+    'Crane Operator',
+    'Surveyor',
+    'Quality Control Inspector',
+    'Estimator',
+    'Supervisor',
+    'Other'
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = careerOptions.filter(option =>
+        option.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !project.requiredSkills.includes(option)
+      );
+      setFilteredSkills(filtered);
+      setShowDropdown(true);
+    } else {
+      setFilteredSkills([]);
+      setShowDropdown(false);
+    }
+  }, [searchTerm, project.requiredSkills]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProject(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleSkillSelect = (skill) => {
+    if (!project.requiredSkills.includes(skill)) {
+      setProject(prev => ({
+        ...prev,
+        requiredSkills: [...prev.requiredSkills, skill]
+      }));
+    }
+    setSearchTerm('');
+    setShowDropdown(false);
+  };
+
+  const handleSkillRemove = (skillToRemove) => {
+    setProject(prev => ({
+      ...prev,
+      requiredSkills: prev.requiredSkills.filter(skill => skill !== skillToRemove)
     }));
   };
 
@@ -60,16 +162,11 @@ const PostProject = () => {
         signer
       );
 
-      const requiredSkillsArray = project.requiredSkills
-        .split(',')
-        .map(skill => skill.trim())
-        .filter(skill => skill.length > 0);
-
       const tx = await contract.createProject(
         project.title,
         project.description,
         ethers.utils.parseEther(project.budget),
-        requiredSkillsArray,
+        project.requiredSkills,
         Math.floor(new Date(project.deadline).getTime() / 1000)
       );
 
@@ -177,17 +274,72 @@ const PostProject = () => {
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel color={textColor}>Required Skills (comma separated)</FormLabel>
-                  <Input
-                    name="requiredSkills"
-                    value={project.requiredSkills}
-                    onChange={handleChange}
-                    placeholder="e.g. Plumbing, Electrical, Carpentry"
-                    bg={inputBg}
-                    borderColor={inputBorderColor}
-                    _hover={{ borderColor: 'blue.400' }}
-                    _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
-                  />
+                  <FormLabel color={textColor}>Required Skills</FormLabel>
+                  <Box position="relative" ref={dropdownRef}>
+                    <InputGroup>
+                      <InputLeftElement pointerEvents="none">
+                        <SearchIcon color="gray.500" />
+                      </InputLeftElement>
+                      <Input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search and select required skills..."
+                        bg={inputBg}
+                        borderColor={inputBorderColor}
+                        _hover={{ borderColor: 'blue.400' }}
+                        _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
+                        onFocus={() => setShowDropdown(true)}
+                      />
+                    </InputGroup>
+                    
+                    {showDropdown && filteredSkills.length > 0 && (
+                      <Box
+                        position="absolute"
+                        top="100%"
+                        left={0}
+                        right={0}
+                        bg={dropdownBg}
+                        borderWidth="1px"
+                        borderColor={dropdownBorderColor}
+                        borderRadius="md"
+                        boxShadow="lg"
+                        zIndex={10}
+                        maxH="200px"
+                        overflowY="auto"
+                      >
+                        <List spacing={0}>
+                          {filteredSkills.map((skill) => (
+                            <ListItem
+                              key={skill}
+                              px={4}
+                              py={2}
+                              cursor="pointer"
+                              _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                              onClick={() => handleSkillSelect(skill)}
+                            >
+                              <Text color={textColor}>{skill}</Text>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {project.requiredSkills.length > 0 && (
+                    <HStack spacing={2} flexWrap="wrap" mt={2}>
+                      {project.requiredSkills.map((skill) => (
+                        <Tag
+                          key={skill}
+                          size="md"
+                          colorScheme="blue"
+                          borderRadius="full"
+                        >
+                          <TagLabel>{skill}</TagLabel>
+                          <TagCloseButton onClick={() => handleSkillRemove(skill)} />
+                        </Tag>
+                      ))}
+                    </HStack>
+                  )}
                 </FormControl>
 
                 <Button
