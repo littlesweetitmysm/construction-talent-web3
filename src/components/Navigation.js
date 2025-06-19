@@ -131,6 +131,19 @@ export default function Navigation() {
     }
   };
 
+  const openWallet = () => {
+    // Try to open the connected wallet (MetaMask)
+    if (window.ethereum) {
+      // Request account access to open MetaMask
+      window.ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
+        console.log('User rejected the request to open wallet');
+      });
+    } else {
+      // Fallback: open MetaMask website if wallet is not available
+      window.open('https://metamask.io');
+    }
+  };
+
   const disconnectWallet = async () => {
     try {
       // Clear state
@@ -207,7 +220,7 @@ export default function Navigation() {
                   aria-label="Options"
                 />
                 <MenuList>
-                  <MenuItem onClick={() => window.open('https://metamask.io')}>
+                  <MenuItem onClick={openWallet}>
                     {`${account.slice(0, 6)}...${account.slice(-4)}`}
                   </MenuItem>
                   <MenuDivider />
