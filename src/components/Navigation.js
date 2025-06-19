@@ -133,9 +133,24 @@ export default function Navigation() {
 
   const disconnectWallet = async () => {
     try {
+      // Clear state
       setAccount('');
       setHasProfile(false);
+      
+      // Remove local storage
       localStorage.removeItem('walletConnected');
+      
+      // Clean up provider connections
+      if (window.ethereum) {
+        // Remove event listeners
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', () => window.location.reload());
+      }
+      
+      // Note: MetaMask doesn't have a disconnect method, but we can clear our connection state
+      // The user would need to manually disconnect from MetaMask if they want to completely disconnect
+      
+      // Navigate to home and reload to clear any cached data
       router.push('/').then(() => {
         window.location.reload();
       });

@@ -67,18 +67,39 @@ const Web3Connection = () => {
   };
 
   const disconnectWallet = async () => {
-    setAccount('');
-    setProvider(null);
-    setBalance('0');
-    setNetwork(null);
-    setShowProfile(false);
-    toast({
-      title: 'Wallet Disconnected',
-      description: 'Your wallet has been disconnected.',
-      status: 'info',
-      duration: 5000,
-      isClosable: true,
-    });
+    try {
+      // Clear state
+      setAccount('');
+      setProvider(null);
+      setBalance('0');
+      setNetwork(null);
+      setShowProfile(false);
+      
+      // Remove local storage
+      localStorage.removeItem('walletConnected');
+      
+      // Clear Web3Modal cache
+      if (window.web3Modal) {
+        window.web3Modal.clearCachedProvider();
+      }
+      
+      toast({
+        title: 'Wallet Disconnected',
+        description: 'Your wallet has been disconnected.',
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+      toast({
+        title: 'Disconnect Error',
+        description: 'Error disconnecting wallet.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleViewProfile = () => {
