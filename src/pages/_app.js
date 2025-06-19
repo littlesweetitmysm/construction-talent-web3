@@ -61,7 +61,7 @@ function MyApp({ Component, pageProps }) {
   `;
 
   return (
-    <ChakraProvider theme={theme}>
+    <ChakraProvider theme={theme} toastOptions={{ defaultOptions: { position: 'top-right' } }}>
       <Global styles={GlobalStyles} />
       <AppContainer>
         <Component {...pageProps} />
