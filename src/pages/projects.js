@@ -77,36 +77,42 @@ const Projects = () => {
 
   const fetchProjects = async () => {
     try {
+      if (!window.ethereum) {
+        setIsLoading(false);
+        return;
+      }
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const contract = new ethers.Contract(
         process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
         ConstructionTalent.abi,
         provider
       );
-
       const projectCount = await contract.projectCount();
       const projectsArray = [];
-
-      for (let i = 1; i <= projectCount; i++) {
-        const project = await contract.projects(i);
-        if (project.isActive) {
-          projectsArray.push({
-            id: i,
-            title: project.title,
-            description: project.description,
-            budget: ethers.utils.formatEther(project.budget),
-            client: project.client,
-            deadline: new Date(project.deadline.toNumber() * 1000),
-            type: project.projectType,
-            status: project.status,
-          });
+      for (let i = 1; i <= projectCount.toNumber(); i++) {
+        try {
+          const [title, description, budget, client, isActive, deadline] = await contract.getProjectInfo(i);
+          if (isActive) {
+            projectsArray.push({
+              id: i,
+              title,
+              description,
+              budget: ethers.utils.formatEther(budget),
+              client,
+              deadline: new Date(deadline.toNumber() * 1000),
+              isActive,
+            });
+          }
+        } catch (error) {
+          // skip if project does not exist
         }
       }
-
       setProjects(projectsArray);
       setFilteredProjects(projectsArray);
     } catch (error) {
       console.error('Error fetching projects:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
