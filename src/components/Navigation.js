@@ -11,6 +11,15 @@ import {
   IconButton,
   useColorModeValue,
   Text,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  VStack,
+  Button,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
@@ -49,6 +58,7 @@ export default function Navigation() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const bgColor = useColorModeValue('white', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -132,16 +142,8 @@ export default function Navigation() {
   };
 
   const openWallet = () => {
-    // Try to open the connected wallet (MetaMask)
-    if (window.ethereum) {
-      // Request account access to open MetaMask
-      window.ethereum.request({ method: 'eth_requestAccounts' }).catch((error) => {
-        console.log('User rejected the request to open wallet');
-      });
-    } else {
-      // Fallback: open MetaMask website if wallet is not available
-      window.open('https://metamask.io');
-    }
+    // Open wallet information modal
+    onOpen();
   };
 
   const disconnectWallet = async () => {
@@ -237,6 +239,57 @@ export default function Navigation() {
           </>
         )}
       </Flex>
+
+      {/* Wallet Information Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Wallet Information</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <VStack spacing={4} align="stretch">
+              <Box>
+                <Text fontSize="sm" color="gray.500" mb={1}>
+                  Connected Address
+                </Text>
+                <Text fontSize="md" fontWeight="medium" fontFamily="mono">
+                  {account}
+                </Text>
+              </Box>
+              
+              <Box>
+                <Text fontSize="sm" color="gray.500" mb={2}>
+                  To manage your wallet:
+                </Text>
+                <VStack spacing={2} align="stretch">
+                  <Text fontSize="sm">• Click the MetaMask extension icon in your browser</Text>
+                  <Text fontSize="sm">• Or right-click and select "Open MetaMask"</Text>
+                  <Text fontSize="sm">• Or visit the MetaMask website</Text>
+                </VStack>
+              </Box>
+
+              <HStack spacing={3} pt={2}>
+                <Button 
+                  colorScheme="blue" 
+                  size="sm" 
+                  onClick={() => window.open('https://metamask.io')}
+                  flex={1}
+                >
+                  Visit MetaMask
+                </Button>
+                <Button 
+                  colorScheme="gray" 
+                  size="sm" 
+                  onClick={onClose}
+                  flex={1}
+                >
+                  Close
+                </Button>
+              </HStack>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 } 
