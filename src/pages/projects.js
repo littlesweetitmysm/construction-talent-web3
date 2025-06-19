@@ -31,8 +31,15 @@ import {
   NumberInput,
   NumberInputField,
   useDisclosure,
+  useToast,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  Alert,
+  AlertIcon,
+  Spinner,
 } from '@chakra-ui/react';
-import { SearchIcon, AddIcon } from '@chakra-ui/icons';
+import { SearchIcon, AddIcon, EditIcon, CloseIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
@@ -43,19 +50,19 @@ const Projects = () => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    type: '',
-    status: '',
+    requiredSkills: '',
     budget: '',
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [currentAccount, setCurrentAccount] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [newProject, setNewProject] = useState({
-    title: '',
-    description: '',
-    type: '',
-    budget: '',
-    deadline: '',
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [updateForm, setUpdateForm] = useState({
+    additionalDescription: '',
+    additionalRequiredSkills: '',
   });
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -66,14 +73,70 @@ const Projects = () => {
   const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   const router = useRouter();
+  const toast = useToast();
+
+  // Career options for filtering
+  const careerOptions = [
+    'Carpenter',
+    'Electrician',
+    'Plumber',
+    'Mason',
+    'Welder',
+    'Painter',
+    'HVAC Technician',
+    'Roofing Specialist',
+    'Flooring Installer',
+    'Concrete Worker',
+    'Heavy Equipment Operator',
+    'Safety Inspector',
+    'Project Manager',
+    'Architect',
+    'Civil Engineer',
+    'Structural Engineer',
+    'Mechanical Engineer',
+    'Electrical Engineer',
+    'Landscaper',
+    'Demolition Specialist',
+    'Scaffolding Specialist',
+    'Glass Installer',
+    'Insulation Specialist',
+    'Drywall Installer',
+    'Tile Setter',
+    'Cabinet Maker',
+    'Millwright',
+    'Ironworker',
+    'Sheet Metal Worker',
+    'Pipefitter',
+    'Boilermaker',
+    'Crane Operator',
+    'Surveyor',
+    'Quality Control Inspector',
+    'Estimator',
+    'Supervisor',
+    'Other'
+  ];
 
   useEffect(() => {
+    checkConnection();
     fetchProjects();
   }, []);
 
   useEffect(() => {
     filterProjects();
   }, [searchTerm, filters, projects]);
+
+  const checkConnection = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setCurrentAccount(accounts[0]);
+        }
+      } catch (error) {
+        console.error('Error checking connection:', error);
+      }
+    }
+  };
 
   const fetchProjects = async () => {
     try {
@@ -91,7 +154,7 @@ const Projects = () => {
       const projectsArray = [];
       for (let i = 1; i <= projectCount.toNumber(); i++) {
         try {
-          const [title, description, budget, client, isActive, deadline] = await contract.getProjectInfo(i);
+          const [title, description, budget, client, isActive, deadline, requiredSkills] = await contract.getProjectInfo(i);
           if (isActive) {
             projectsArray.push({
               id: i,
@@ -101,6 +164,10 @@ const Projects = () => {
               client,
               deadline: new Date(deadline.toNumber() * 1000),
               isActive,
+              requiredSkills: requiredSkills || [],
+              // Additional fields (stored in localStorage for now)
+              additionalDescription: localStorage.getItem(`project_${i}_additionalDesc`) || '',
+              additionalRequiredSkills: localStorage.getItem(`project_${i}_additionalSkills`) || '',
             });
           }
         } catch (error) {
@@ -123,18 +190,20 @@ const Projects = () => {
     if (searchTerm) {
       filtered = filtered.filter(project =>
         project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchTerm.toLowerCase())
+        project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (project.additionalDescription && project.additionalDescription.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Type filter
-    if (filters.type) {
-      filtered = filtered.filter(project => project.type === filters.type);
-    }
-
-    // Status filter
-    if (filters.status) {
-      filtered = filtered.filter(project => project.status === filters.status);
+    // Required skills filter
+    if (filters.requiredSkills) {
+      filtered = filtered.filter(project => {
+        const allSkills = [
+          ...project.requiredSkills,
+          ...(project.additionalRequiredSkills ? project.additionalRequiredSkills.split(',').map(s => s.trim()) : [])
+        ];
+        return allSkills.some(skill => skill.toLowerCase().includes(filters.requiredSkills.toLowerCase()));
+      });
     }
 
     // Budget filter
@@ -157,15 +226,79 @@ const Projects = () => {
     }));
   };
 
-  const handleNewProjectChange = (e) => {
+  const handleUpdateFormChange = (e) => {
     const { name, value } = e.target;
-    setNewProject(prev => ({
+    setUpdateForm(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSubmitProject = async () => {
+  const openUpdateModal = (project) => {
+    setSelectedProject(project);
+    setUpdateForm({
+      additionalDescription: '',
+      additionalRequiredSkills: '',
+    });
+    onOpen();
+  };
+
+  const handleUpdateProject = async () => {
+    if (!selectedProject) return;
+
+    setIsUpdating(true);
+    try {
+      // Update local storage with new content (appending to existing)
+      const currentDesc = selectedProject.additionalDescription || '';
+      const currentSkills = selectedProject.additionalRequiredSkills || '';
+
+      const newDesc = currentDesc + (updateForm.additionalDescription ? '\n' + updateForm.additionalDescription : '');
+      const newSkills = currentSkills + (updateForm.additionalRequiredSkills ? ', ' + updateForm.additionalRequiredSkills : '');
+
+      localStorage.setItem(`project_${selectedProject.id}_additionalDesc`, newDesc);
+      localStorage.setItem(`project_${selectedProject.id}_additionalSkills`, newSkills);
+
+      // Update state
+      setProjects(prev => prev.map(project => 
+        project.id === selectedProject.id 
+          ? { ...project, additionalDescription: newDesc, additionalRequiredSkills: newSkills }
+          : project
+      ));
+
+      // Reset form
+      setUpdateForm({
+        additionalDescription: '',
+        additionalRequiredSkills: '',
+      });
+
+      onClose();
+      toast({
+        title: 'Project Updated',
+        description: 'Your project has been updated successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast({
+        title: 'Update Failed',
+        description: 'Failed to update project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCloseProject = async (projectId) => {
+    if (!window.confirm('Are you sure you want to close this project? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsClosing(true);
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
@@ -175,22 +308,46 @@ const Projects = () => {
         signer
       );
 
-      const tx = await contract.createProject(
-        newProject.title,
-        newProject.description,
-        newProject.type,
-        ethers.utils.parseEther(newProject.budget),
-        Math.floor(new Date(newProject.deadline).getTime() / 1000)
-      );
-
+      const tx = await contract.closeProject(projectId);
       await tx.wait();
-      onClose();
+
       // Refresh projects list
       fetchProjects();
+      
+      toast({
+        title: 'Project Closed',
+        description: 'The project has been closed successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Error closing project:', error);
+      toast({
+        title: 'Close Failed',
+        description: 'Failed to close project. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsClosing(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box minH="100vh">
+        <Navigation />
+        <Container maxW="container.xl" pt={20} pb={10}>
+          <VStack spacing={8} align="center">
+            <Spinner size="xl" />
+            <Text>Loading projects...</Text>
+          </VStack>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box minH="100vh">
@@ -217,34 +374,25 @@ const Projects = () => {
                   <SearchIcon color="gray.500" />
                 </InputLeftElement>
                 <Input
-                  placeholder="Search projects..."
+                  placeholder="Search projects by title, description, or skills..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </InputGroup>
 
-              <HStack spacing={4} width="full">
+              <HStack spacing={4} width="full" wrap="wrap">
                 <Select
-                  name="type"
-                  placeholder="Project Type"
-                  value={filters.type}
+                  name="requiredSkills"
+                  placeholder="Filter by Required Skills"
+                  value={filters.requiredSkills}
                   onChange={handleFilterChange}
+                  maxW="250px"
                 >
-                  <option value="residential">Residential</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="industrial">Industrial</option>
-                  <option value="infrastructure">Infrastructure</option>
-                </Select>
-
-                <Select
-                  name="status"
-                  placeholder="Project Status"
-                  value={filters.status}
-                  onChange={handleFilterChange}
-                >
-                  <option value="open">Open</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="completed">Completed</option>
+                  {careerOptions.map((career) => (
+                    <option key={career} value={career}>
+                      {career}
+                    </option>
+                  ))}
                 </Select>
 
                 <Select
@@ -252,80 +400,143 @@ const Projects = () => {
                   placeholder="Budget Range"
                   value={filters.budget}
                   onChange={handleFilterChange}
+                  maxW="200px"
                 >
-                  <option value="0-10000">$0 - $10,000</option>
-                  <option value="10000-50000">$10,000 - $50,000</option>
-                  <option value="50000-100000">$50,000 - $100,000</option>
-                  <option value="100000-500000">$100,000 - $500,000</option>
-                  <option value="500000-1000000">$500,000+</option>
+                  <option value="0-1">0 - 1 ETH</option>
+                  <option value="1-5">1 - 5 ETH</option>
+                  <option value="5-10">5 - 10 ETH</option>
+                  <option value="10-50">10 - 50 ETH</option>
+                  <option value="50-100">50+ ETH</option>
                 </Select>
               </HStack>
             </VStack>
           </Box>
 
+          {/* Results Count */}
+          <Text color="gray.500">
+            {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} found
+          </Text>
+
           {/* Projects Grid */}
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-            {filteredProjects.map((project) => (
-              <Card key={project.id} bg={cardBg} borderWidth="1px" borderColor={borderColor}>
-                <CardBody>
-                  <Stack spacing={4}>
-                    <Heading size="md" color={textColor}>{project.title}</Heading>
-                    <Text color={textColor} noOfLines={3}>
-                      {project.description}
-                    </Text>
-                    <HStack>
-                      <Badge colorScheme="green">{project.type}</Badge>
-                      <Badge colorScheme="blue">{project.status}</Badge>
-                    </HStack>
-                    <Divider />
-                    <HStack justify="space-between">
-                      <Text color={textColor} fontWeight="bold">
-                        Budget: ${Number(project.budget).toLocaleString()}
+          {filteredProjects.length > 0 ? (
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {filteredProjects.map((project) => (
+                <Card key={project.id} bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+                  <CardBody>
+                    <Stack spacing={4}>
+                      <Heading size="md" color={textColor}>{project.title}</Heading>
+                      <Text color={textColor} noOfLines={3}>
+                        {project.description}
                       </Text>
-                      <Button size="sm" colorScheme="blue">
-                        View Details
-                      </Button>
-                    </HStack>
-                    <Text color="gray.500" fontSize="sm">
-                      Deadline: {project.deadline.toLocaleDateString()}
-                    </Text>
-                  </Stack>
-                </CardBody>
-              </Card>
-            ))}
-          </SimpleGrid>
+                      {project.additionalDescription && (
+                        <Text color="gray.600" fontSize="sm" noOfLines={2}>
+                          {project.additionalDescription}
+                        </Text>
+                      )}
+                      
+                      {/* Required Skills */}
+                      <Box>
+                        <Text fontSize="sm" fontWeight="semibold" mb={2}>Required Skills:</Text>
+                        <HStack flexWrap="wrap" spacing={1}>
+                          {project.requiredSkills && project.requiredSkills.length > 0 ? (
+                            project.requiredSkills.slice(0, 3).map((skill, index) => (
+                              <Badge key={index} colorScheme="blue" size="sm">
+                                {skill}
+                              </Badge>
+                            ))
+                          ) : (
+                            <Text fontSize="sm" color="gray.500">No skills specified</Text>
+                          )}
+                          {project.requiredSkills && project.requiredSkills.length > 3 && (
+                            <Badge colorScheme="gray" size="sm">
+                              +{project.requiredSkills.length - 3} more
+                            </Badge>
+                          )}
+                        </HStack>
+                        {project.additionalRequiredSkills && (
+                          <HStack flexWrap="wrap" spacing={1} mt={2}>
+                            {project.additionalRequiredSkills.split(',').slice(0, 2).map((skill, index) => (
+                              <Badge key={index} colorScheme="green" size="sm">
+                                {skill.trim()}
+                              </Badge>
+                            ))}
+                            {project.additionalRequiredSkills.split(',').length > 2 && (
+                              <Badge colorScheme="gray" size="sm">
+                                +{project.additionalRequiredSkills.split(',').length - 2} more
+                              </Badge>
+                            )}
+                          </HStack>
+                        )}
+                      </Box>
+
+                      <Divider />
+                      
+                      <HStack justify="space-between">
+                        <Text color={textColor} fontWeight="bold">
+                          Budget: {Number(project.budget).toFixed(2)} ETH
+                        </Text>
+                        <Text color="gray.500" fontSize="sm">
+                          Deadline: {project.deadline.toLocaleDateString()}
+                        </Text>
+                      </HStack>
+
+                      {/* Owner Actions */}
+                      {currentAccount && currentAccount.toLowerCase() === project.client.toLowerCase() && (
+                        <HStack spacing={2}>
+                          <Button
+                            size="sm"
+                            leftIcon={<EditIcon />}
+                            colorScheme="blue"
+                            variant="outline"
+                            onClick={() => openUpdateModal(project)}
+                          >
+                            Update
+                          </Button>
+                          <Button
+                            size="sm"
+                            leftIcon={<CloseIcon />}
+                            colorScheme="red"
+                            variant="outline"
+                            onClick={() => handleCloseProject(project.id)}
+                            isLoading={isClosing}
+                          >
+                            Close
+                          </Button>
+                        </HStack>
+                      )}
+
+                      <Text color="gray.500" fontSize="xs" fontFamily="mono">
+                        Posted by: {project.client.slice(0, 6)}...{project.client.slice(-4)}
+                      </Text>
+                    </Stack>
+                  </CardBody>
+                </Card>
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Alert status="info">
+              <AlertIcon />
+              No projects found matching your search criteria.
+            </Alert>
+          )}
         </VStack>
       </Container>
 
-      {/* Post Project Modal */}
+      {/* Update Project Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent bg={modalBg} borderWidth="1px" borderColor={modalBorderColor}>
-          <ModalHeader color={textColor}>Post New Project</ModalHeader>
+          <ModalHeader color={textColor}>Update Project</ModalHeader>
           <ModalCloseButton color={textColor} />
           <ModalBody>
             <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel color={textColor}>Project Title</FormLabel>
-                <Input
-                  name="title"
-                  value={newProject.title}
-                  onChange={handleNewProjectChange}
-                  placeholder="Enter project title"
-                  bg={inputBg}
-                  borderColor={inputBorderColor}
-                  _hover={{ borderColor: 'blue.400' }}
-                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel color={textColor}>Description</FormLabel>
+              <FormControl>
+                <FormLabel color={textColor}>Additional Description</FormLabel>
                 <Textarea
-                  name="description"
-                  value={newProject.description}
-                  onChange={handleNewProjectChange}
-                  placeholder="Enter project description"
+                  name="additionalDescription"
+                  value={updateForm.additionalDescription}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add more details to the project description..."
                   bg={inputBg}
                   borderColor={inputBorderColor}
                   _hover={{ borderColor: 'blue.400' }}
@@ -333,48 +544,13 @@ const Projects = () => {
                 />
               </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel color={textColor}>Project Type</FormLabel>
-                <Select
-                  name="type"
-                  value={newProject.type}
-                  onChange={handleNewProjectChange}
-                  placeholder="Select project type"
-                  bg={inputBg}
-                  borderColor={inputBorderColor}
-                  _hover={{ borderColor: 'blue.400' }}
-                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
-                >
-                  <option value="residential">Residential</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="industrial">Industrial</option>
-                  <option value="infrastructure">Infrastructure</option>
-                </Select>
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel color={textColor}>Budget (ETH)</FormLabel>
-                <NumberInput min={0}>
-                  <NumberInputField
-                    name="budget"
-                    value={newProject.budget}
-                    onChange={handleNewProjectChange}
-                    placeholder="Enter budget in ETH"
-                    bg={inputBg}
-                    borderColor={inputBorderColor}
-                    _hover={{ borderColor: 'blue.400' }}
-                    _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
-                  />
-                </NumberInput>
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel color={textColor}>Deadline</FormLabel>
+              <FormControl>
+                <FormLabel color={textColor}>Additional Required Skills</FormLabel>
                 <Input
-                  name="deadline"
-                  type="date"
-                  value={newProject.deadline}
-                  onChange={handleNewProjectChange}
+                  name="additionalRequiredSkills"
+                  value={updateForm.additionalRequiredSkills}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add more required skills (comma-separated)"
                   bg={inputBg}
                   borderColor={inputBorderColor}
                   _hover={{ borderColor: 'blue.400' }}
@@ -388,8 +564,12 @@ const Projects = () => {
             <Button variant="ghost" mr={3} onClick={onClose} color={textColor}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleSubmitProject}>
-              Post Project
+            <Button 
+              colorScheme="blue" 
+              onClick={handleUpdateProject}
+              isLoading={isUpdating}
+            >
+              Update Project
             </Button>
           </ModalFooter>
         </ModalContent>

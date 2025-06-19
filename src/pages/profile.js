@@ -29,36 +29,43 @@ import {
   ModalCloseButton,
   useDisclosure,
   Select,
+  Card,
+  CardBody,
+  Stack,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/Navigation';
 import { getTalentInfo } from '../utils/contract';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
+import { EditIcon, AddIcon } from '@chakra-ui/icons';
 
 const Profile = () => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isOwner, setIsOwner] = useState(false);
+  const [talent, setTalent] = useState(null);
   const [account, setAccount] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const router = useRouter();
   const { address } = router.query;
 
-  const [formData, setFormData] = useState({
-    name: '',
-    gender: '',
-    birthday: '',
-    physicalAddress: '',
-    governmentId: '',
-    career: '',
+  const [updateForm, setUpdateForm] = useState({
+    additionalSkills: '',
+    additionalCertifications: '',
+    experience: '',
+    portfolio: '',
+    references: '',
   });
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
     checkConnection();
     if (address) {
-      fetchProfile();
+      fetchTalentProfile();
     }
   }, [address]);
 
@@ -68,7 +75,6 @@ const Profile = () => {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
           setAccount(accounts[0]);
-          setIsOwner(accounts[0].toLowerCase() === address?.toLowerCase());
         }
       } catch (error) {
         console.error('Error checking connection:', error);
@@ -76,260 +82,368 @@ const Profile = () => {
     }
   };
 
-  const fetchProfile = async () => {
+  const fetchTalentProfile = async () => {
+    if (!window.ethereum) {
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const accounts = await provider.listAccounts();
+      
+      if (accounts.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+      
+      const currentAccount = accounts[0];
+      setAccount(currentAccount);
+      
       const contract = new ethers.Contract(
         process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
         ConstructionTalent.abi,
         provider
       );
-
-      const talentInfo = await contract.getTalentInfo(address);
       
-      if (talentInfo.name === '') {
-        router.push('/404');
-        return;
+      const talentInfo = await contract.getTalentInfo(currentAccount);
+      const [name, gender, birthday, physicalAddress, governmentId, career, certifications, isVerified, rating, projectCount] = talentInfo;
+      
+      if (name && name.length > 0) {
+        setTalent({
+          address: currentAccount,
+          name,
+          gender,
+          birthday,
+          physicalAddress,
+          governmentId,
+          career,
+          certifications,
+          isVerified,
+          rating: Number(rating),
+          projectCount: Number(projectCount),
+          // Additional fields (stored in localStorage for now)
+          additionalSkills: localStorage.getItem(`talent_${currentAccount}_skills`) || '',
+          additionalCertifications: localStorage.getItem(`talent_${currentAccount}_additionalCerts`) || '',
+          experience: localStorage.getItem(`talent_${currentAccount}_experience`) || '',
+          portfolio: localStorage.getItem(`talent_${currentAccount}_portfolio`) || '',
+          references: localStorage.getItem(`talent_${currentAccount}_references`) || '',
+        });
       }
-
-      setProfile({
-        name: talentInfo.name,
-        gender: talentInfo.gender,
-        birthday: new Date(talentInfo.birthday * 1000).toISOString().split('T')[0],
-        physicalAddress: talentInfo.physicalAddress,
-        governmentId: talentInfo.governmentId,
-        career: talentInfo.career,
-        isVerified: talentInfo.isVerified,
-        rating: talentInfo.rating.toNumber(),
-        completedProjects: talentInfo.completedProjects.toNumber(),
-        lastUpdateTimestamp: new Date(talentInfo.lastUpdateTimestamp * 1000),
-      });
-
-      setFormData({
-        name: talentInfo.name,
-        gender: talentInfo.gender,
-        birthday: new Date(talentInfo.birthday * 1000).toISOString().split('T')[0],
-        physicalAddress: talentInfo.physicalAddress,
-        governmentId: talentInfo.governmentId,
-        career: talentInfo.career,
-      });
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch profile information',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      console.error('Error fetching talent profile:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleUpdateFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setUpdateForm(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
   const handleUpdateProfile = async () => {
+    if (!talent) return;
+
+    setIsUpdating(true);
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
-        ConstructionTalent.abi,
-        signer
-      );
+      // Update local storage with new content (appending to existing)
+      const currentSkills = talent.additionalSkills || '';
+      const currentCerts = talent.additionalCertifications || '';
+      const currentExp = talent.experience || '';
+      const currentPortfolio = talent.portfolio || '';
+      const currentRefs = talent.references || '';
 
-      const birthdayTimestamp = Math.floor(new Date(formData.birthday).getTime() / 1000);
+      const newSkills = currentSkills + (updateForm.additionalSkills ? '\n' + updateForm.additionalSkills : '');
+      const newCerts = currentCerts + (updateForm.additionalCertifications ? '\n' + updateForm.additionalCertifications : '');
+      const newExp = currentExp + (updateForm.experience ? '\n' + updateForm.experience : '');
+      const newPortfolio = currentPortfolio + (updateForm.portfolio ? '\n' + updateForm.portfolio : '');
+      const newRefs = currentRefs + (updateForm.references ? '\n' + updateForm.references : '');
 
-      const tx = await contract.updateTalentProfile(
-        formData.name,
-        formData.gender,
-        birthdayTimestamp,
-        formData.physicalAddress,
-        formData.governmentId,
-        formData.career
-      );
+      localStorage.setItem(`talent_${account}_skills`, newSkills);
+      localStorage.setItem(`talent_${account}_additionalCerts`, newCerts);
+      localStorage.setItem(`talent_${account}_experience`, newExp);
+      localStorage.setItem(`talent_${account}_portfolio`, newPortfolio);
+      localStorage.setItem(`talent_${account}_references`, newRefs);
 
-      await tx.wait();
+      // Update state
+      setTalent(prev => ({
+        ...prev,
+        additionalSkills: newSkills,
+        additionalCertifications: newCerts,
+        experience: newExp,
+        portfolio: newPortfolio,
+        references: newRefs,
+      }));
 
+      // Reset form
+      setUpdateForm({
+        additionalSkills: '',
+        additionalCertifications: '',
+        experience: '',
+        portfolio: '',
+        references: '',
+      });
+
+      onClose();
       toast({
         title: 'Profile Updated',
-        description: 'Your profile has been updated successfully',
+        description: 'Your profile has been updated successfully.',
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
-
-      onClose();
-      fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
         title: 'Update Failed',
-        description: error.message || 'Failed to update profile',
+        description: 'Failed to update profile. Please try again.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Box minH="100vh" bg="gray.50">
+      <Box minH="100vh">
         <Navigation />
-        <Container maxW="container.md" py={10}>
-          <Text>Loading...</Text>
+        <Container maxW="container.md" pt={20} pb={10}>
+          <Text>Loading profile...</Text>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (!account) {
+    return (
+      <Box minH="100vh">
+        <Navigation />
+        <Container maxW="container.md" pt={20} pb={10}>
+          <Text>Please connect your wallet to view your profile.</Text>
+        </Container>
+      </Box>
+    );
+  }
+
+  if (!talent) {
+    return (
+      <Box minH="100vh">
+        <Navigation />
+        <Container maxW="container.md" pt={20} pb={10}>
+          <VStack spacing={6}>
+            <Text>No talent profile found for this wallet.</Text>
+            <Button colorScheme="blue" onClick={() => window.location.href = '/register-talent'}>
+              Register as Talent
+            </Button>
+          </VStack>
         </Container>
       </Box>
     );
   }
 
   return (
-    <Box minH="100vh" bg="gray.50">
+    <Box minH="100vh">
       <Navigation />
-      <Container maxW="container.md" py={10}>
+      <Container maxW="container.lg" pt={20} pb={10}>
         <VStack spacing={8} align="stretch">
-          <Box
-            bg="white"
-            p={8}
-            borderRadius="xl"
-            boxShadow="xl"
-          >
-            <VStack spacing={6} align="stretch">
-              <HStack justify="space-between">
-                <Heading size="xl">{profile.name}</Heading>
-                {isOwner && (
-                  <Button colorScheme="blue" onClick={onOpen}>
-                    Edit Profile
-                  </Button>
+          {/* Header */}
+          <HStack justify="space-between" align="center">
+            <Heading size="xl" color={textColor}>My Profile</Heading>
+            <Button
+              leftIcon={<EditIcon />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Update Profile
+            </Button>
+          </HStack>
+
+          {/* Main Profile Card */}
+          <Card bg={cardBg} borderWidth="1px" borderColor={borderColor}>
+            <CardBody>
+              <VStack spacing={6} align="stretch">
+                {/* Basic Info */}
+                <HStack spacing={6}>
+                  <Avatar name={talent.name} size="2xl" />
+                  <VStack align="start" spacing={2}>
+                    <Heading size="lg">{talent.name}</Heading>
+                    <HStack>
+                      <Badge colorScheme={talent.isVerified ? 'green' : 'yellow'} size="lg">
+                        {talent.isVerified ? 'Verified Professional' : 'Pending Verification'}
+                      </Badge>
+                      <Badge colorScheme="blue" size="lg">
+                        {talent.career}
+                      </Badge>
+                    </HStack>
+                    <Text color="gray.500">Wallet: {talent.address}</Text>
+                  </VStack>
+                </HStack>
+
+                <Divider />
+
+                {/* Personal Information */}
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Personal Information</Text>
+                    <VStack align="start" spacing={1}>
+                      <Text><b>Gender:</b> {talent.gender}</Text>
+                      <Text><b>Birthday:</b> {talent.birthday}</Text>
+                      <Text><b>Address:</b> {talent.physicalAddress}</Text>
+                      <Text><b>Government ID:</b> {talent.governmentId}</Text>
+                    </VStack>
+                  </Box>
+
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Professional Stats</Text>
+                    <VStack align="start" spacing={1}>
+                      <Text><b>Rating:</b> {talent.rating}/5</Text>
+                      <Text><b>Projects Completed:</b> {talent.projectCount}</Text>
+                      <Text><b>Career:</b> {talent.career}</Text>
+                    </VStack>
+                  </Box>
+                </SimpleGrid>
+
+                <Divider />
+
+                {/* Certifications */}
+                <Box>
+                  <Text fontWeight="bold" mb={3}>Certifications</Text>
+                  <HStack flexWrap="wrap" spacing={2}>
+                    {talent.certifications && talent.certifications.length > 0 ? (
+                      talent.certifications.map((cert, index) => (
+                        <Badge key={index} colorScheme="green" size="md">
+                          {cert}
+                        </Badge>
+                      ))
+                    ) : (
+                      <Text color="gray.500">No certifications listed</Text>
+                    )}
+                  </HStack>
+                  {talent.additionalCertifications && (
+                    <Box mt={3}>
+                      <Text fontWeight="semibold" mb={2}>Additional Certifications:</Text>
+                      <Text whiteSpace="pre-line">{talent.additionalCertifications}</Text>
+                    </Box>
+                  )}
+                </Box>
+
+                <Divider />
+
+                {/* Additional Skills */}
+                {talent.additionalSkills && (
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Additional Skills</Text>
+                    <Text whiteSpace="pre-line">{talent.additionalSkills}</Text>
+                  </Box>
                 )}
-              </HStack>
 
-              <HStack>
-                <Badge colorScheme={profile.isVerified ? 'green' : 'yellow'}>
-                  {profile.isVerified ? 'Verified' : 'Pending Verification'}
-                </Badge>
-                <Badge colorScheme="blue">
-                  Rating: {profile.rating}/5
-                </Badge>
-                <Badge colorScheme="purple">
-                  {profile.completedProjects} Projects Completed
-                </Badge>
-              </HStack>
+                {/* Experience */}
+                {talent.experience && (
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Experience</Text>
+                    <Text whiteSpace="pre-line">{talent.experience}</Text>
+                  </Box>
+                )}
 
-              <VStack align="stretch" spacing={4}>
-                <Box>
-                  <Text fontWeight="bold">Gender</Text>
-                  <Text>{profile.gender}</Text>
-                </Box>
+                {/* Portfolio */}
+                {talent.portfolio && (
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Portfolio</Text>
+                    <Text whiteSpace="pre-line">{talent.portfolio}</Text>
+                  </Box>
+                )}
 
-                <Box>
-                  <Text fontWeight="bold">Birthday</Text>
-                  <Text>{profile.birthday}</Text>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="bold">Physical Address</Text>
-                  <Text>{profile.physicalAddress}</Text>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="bold">Government ID</Text>
-                  <Text>{profile.governmentId}</Text>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="bold">Career</Text>
-                  <Text>{profile.career}</Text>
-                </Box>
-
-                <Box>
-                  <Text fontWeight="bold">Last Updated</Text>
-                  <Text>{profile.lastUpdateTimestamp.toLocaleString()}</Text>
-                </Box>
+                {/* References */}
+                {talent.references && (
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>References</Text>
+                    <Text whiteSpace="pre-line">{talent.references}</Text>
+                  </Box>
+                )}
               </VStack>
-            </VStack>
-          </Box>
+            </CardBody>
+          </Card>
         </VStack>
       </Container>
 
-      {/* Edit Profile Modal */}
+      {/* Update Profile Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Edit Profile</ModalHeader>
+          <ModalHeader>Update Profile</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <VStack spacing={4}>
               <FormControl>
-                <FormLabel>Full Name</FormLabel>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
+                <FormLabel>Additional Skills</FormLabel>
+                <Textarea
+                  name="additionalSkills"
+                  value={updateForm.additionalSkills}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add new skills..."
                 />
               </FormControl>
 
               <FormControl>
-                <FormLabel>Gender</FormLabel>
-                <Select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
+                <FormLabel>Additional Certifications</FormLabel>
+                <Textarea
+                  name="additionalCertifications"
+                  value={updateForm.additionalCertifications}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add new certifications..."
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Experience</FormLabel>
+                <Textarea
+                  name="experience"
+                  value={updateForm.experience}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add work experience..."
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Portfolio</FormLabel>
+                <Textarea
+                  name="portfolio"
+                  value={updateForm.portfolio}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add portfolio items..."
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>References</FormLabel>
+                <Textarea
+                  name="references"
+                  value={updateForm.references}
+                  onChange={handleUpdateFormChange}
+                  placeholder="Add references..."
+                />
+              </FormControl>
+
+              <HStack spacing={3} w="full">
+                <Button
+                  colorScheme="blue"
+                  onClick={handleUpdateProfile}
+                  isLoading={isUpdating}
+                  flex={1}
                 >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Birthday</FormLabel>
-                <Input
-                  name="birthday"
-                  type="date"
-                  value={formData.birthday}
-                  onChange={handleInputChange}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Physical Address</FormLabel>
-                <Textarea
-                  name="physicalAddress"
-                  value={formData.physicalAddress}
-                  onChange={handleInputChange}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Government ID</FormLabel>
-                <Input
-                  name="governmentId"
-                  value={formData.governmentId}
-                  onChange={handleInputChange}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Career</FormLabel>
-                <Textarea
-                  name="career"
-                  value={formData.career}
-                  onChange={handleInputChange}
-                />
-              </FormControl>
-
-              <Button colorScheme="blue" onClick={handleUpdateProfile} width="full">
-                Update Profile
-              </Button>
+                  Update Profile
+                </Button>
+                <Button onClick={onClose} flex={1}>
+                  Cancel
+                </Button>
+              </HStack>
             </VStack>
           </ModalBody>
         </ModalContent>
