@@ -91,4 +91,78 @@ export const getProjectCount = async (provider) => {
 export const getTalentCount = async (provider) => {
   const contract = getContract(provider);
   return contract.getTalentCount();
+};
+
+export const getAllTalents = async (contract) => {
+  try {
+    // Method 1: Check for talent registration events
+    const filter = contract.filters.TalentRegistered();
+    const events = await contract.queryFilter(filter);
+    
+    const talentAddresses = events.map(event => event.args.talentAddress);
+    const talents = [];
+    
+    for (const address of talentAddresses) {
+      try {
+        const talentInfo = await contract.getTalentInfo(address);
+        const [name, gender, birthday, physicalAddress, governmentId, career, certifications, isVerified, rating, projectCount] = talentInfo;
+        
+        if (name && name.length > 0) {
+          talents.push({
+            address,
+            name,
+            gender,
+            birthday,
+            physicalAddress,
+            governmentId,
+            career,
+            certifications: certifications || [],
+            isVerified,
+            rating: Number(rating),
+            projectCount: Number(projectCount),
+          });
+        }
+      } catch (error) {
+        console.log(`Error fetching talent info for ${address}:`, error);
+      }
+    }
+    
+    return talents;
+  } catch (error) {
+    console.error('Error fetching all talents:', error);
+    return [];
+  }
+};
+
+export const getTalentByAddress = async (contract, address) => {
+  try {
+    const talentInfo = await contract.getTalentInfo(address);
+    const [name, gender, birthday, physicalAddress, governmentId, career, certifications, isVerified, rating, projectCount] = talentInfo;
+    
+    if (name && name.length > 0) {
+      return {
+        address,
+        name,
+        gender,
+        birthday,
+        physicalAddress,
+        governmentId,
+        career,
+        certifications: certifications || [],
+        isVerified,
+        rating: Number(rating),
+        projectCount: Number(projectCount),
+        // Additional fields from localStorage
+        additionalSkills: localStorage.getItem(`talent_${address}_skills`) || '',
+        additionalCertifications: localStorage.getItem(`talent_${address}_additionalCerts`) || '',
+        experience: localStorage.getItem(`talent_${address}_experience`) || '',
+        portfolio: localStorage.getItem(`talent_${address}_portfolio`) || '',
+        references: localStorage.getItem(`talent_${address}_references`) || '',
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching talent by address:', error);
+    return null;
+  }
 }; 
