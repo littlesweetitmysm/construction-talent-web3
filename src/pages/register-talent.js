@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Container,
@@ -48,7 +48,7 @@ export default function RegisterTalent() {
   const toast = useToast();
 
   // Construction certifications list
-  const certificationOptions = [
+  const certificationOptions = useMemo(() => [
     'OSHA 10',
     'OSHA 30',
     'CSCS Card',
@@ -77,7 +77,7 @@ export default function RegisterTalent() {
     'RICS Membership / MRICS',
     'FIDIC Contract Training Certificate',
     'Other'
-  ];
+  ], []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -92,19 +92,22 @@ export default function RegisterTalent() {
     };
   }, []);
 
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = certificationOptions.filter(option =>
-        option.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !formData.certifications.includes(option)
+  // Memoize the filter function to prevent unnecessary re-renders
+  const filterCertifications = useCallback((search, selectedCerts) => {
+    if (search) {
+      return certificationOptions.filter(option =>
+        option.toLowerCase().includes(search.toLowerCase()) &&
+        !selectedCerts.includes(option)
       );
-      setFilteredCertifications(filtered);
-      setShowDropdown(true);
-    } else {
-      setFilteredCertifications([]);
-      setShowDropdown(false);
     }
-  }, [searchTerm, formData.certifications]);
+    return [];
+  }, [certificationOptions]);
+
+  useEffect(() => {
+    const filtered = filterCertifications(searchTerm, formData.certifications);
+    setFilteredCertifications(filtered);
+    setShowDropdown(searchTerm.length > 0 && filtered.length > 0);
+  }, [searchTerm, formData.certifications, filterCertifications]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
