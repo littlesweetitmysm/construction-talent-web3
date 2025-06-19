@@ -159,7 +159,13 @@ const PostProject = () => {
     const titleValid = project.title.trim() !== '';
     const descriptionValid = project.description.trim() !== '';
     const budgetValid = project.budget && parseFloat(project.budget) > 0;
-    const deadlineValid = project.deadline !== '';
+    
+    // Check if deadline is not earlier than today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    const deadlineDate = project.deadline ? new Date(project.deadline) : null;
+    const deadlineValid = project.deadline && deadlineDate >= today;
+    
     const skillsValid = project.requiredSkills.length > 0;
 
     // Debug logging
@@ -169,7 +175,9 @@ const PostProject = () => {
       budget: budgetValid,
       deadline: deadlineValid,
       skills: skillsValid,
-      project: project
+      project: project,
+      today: today,
+      deadlineDate: deadlineDate
     });
 
     return titleValid && descriptionValid && budgetValid && deadlineValid && skillsValid;

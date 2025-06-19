@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -7,19 +7,29 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Button,
-  useToast,
-  useColorModeValue,
-  Select,
   Textarea,
+  Select,
+  Button,
+  useColorModeValue,
+  useToast,
+  HStack,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  InputGroup,
+  InputLeftElement,
+  List,
+  ListItem,
   Text,
 } from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
+import Navigation from '../components/Navigation';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
-import Navigation from '../components/Navigation';
 
 export default function RegisterTalent() {
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -27,17 +37,217 @@ export default function RegisterTalent() {
     physicalAddress: '',
     governmentId: '',
     career: '',
-    certifications: '',
+    certifications: [],
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const toast = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredCertifications, setFilteredCertifications] = useState([]);
+  const dropdownRef = useRef(null);
+
   const router = useRouter();
+  const toast = useToast();
+
+  // Comprehensive construction certifications
+  const certificationOptions = [
+    // Safety Certifications
+    'OSHA 10-Hour Construction Safety',
+    'OSHA 30-Hour Construction Safety',
+    'OSHA Confined Space Entry',
+    'OSHA Fall Protection',
+    'OSHA Scaffolding Safety',
+    'OSHA Excavation Safety',
+    'OSHA Crane Safety',
+    'OSHA Electrical Safety',
+    'OSHA Hazard Communication',
+    'OSHA Respiratory Protection',
+    'OSHA Lockout/Tagout',
+    'OSHA Hot Work Safety',
+    'OSHA Welding Safety',
+    'OSHA Asbestos Awareness',
+    'OSHA Lead Safety',
+    'OSHA Silica Safety',
+    'OSHA Noise Safety',
+    'OSHA Personal Protective Equipment',
+    'OSHA Emergency Response',
+    'OSHA First Aid/CPR',
+    
+    // Trade-Specific Certifications
+    'Journeyman Electrician License',
+    'Master Electrician License',
+    'Electrical Contractor License',
+    'NEC Code Certification',
+    'Solar Panel Installation',
+    'EV Charger Installation',
+    'Smart Home Systems',
+    'Low Voltage Systems',
+    'Journeyman Plumber License',
+    'Master Plumber License',
+    'Plumbing Contractor License',
+    'Gas Fitting License',
+    'Backflow Prevention',
+    'Water Treatment Systems',
+    'Journeyman Carpenter',
+    'Master Carpenter',
+    'Cabinet Making',
+    'Finish Carpentry',
+    'Rough Carpentry',
+    'Formwork Specialist',
+    'Concrete Finishing',
+    'Masonry Certification',
+    'Brick Laying',
+    'Stone Masonry',
+    'Tile Setting',
+    'Terrazzo Installation',
+    'Welding Certification',
+    'Structural Welding',
+    'Pipe Welding',
+    'Aluminum Welding',
+    'Stainless Steel Welding',
+    'HVAC Technician',
+    'HVAC Installation',
+    'HVAC Maintenance',
+    'Refrigeration Systems',
+    'Air Conditioning',
+    'Heating Systems',
+    'Boiler Operation',
+    'Chiller Systems',
+    'Roofing Certification',
+    'Shingle Roofing',
+    'Metal Roofing',
+    'Flat Roofing',
+    'Green Roofing',
+    'Solar Roofing',
+    'Flooring Installation',
+    'Hardwood Flooring',
+    'Laminate Flooring',
+    'Vinyl Flooring',
+    'Carpet Installation',
+    'Epoxy Flooring',
+    'Concrete Staining',
+    'Heavy Equipment Operation',
+    'Crane Operation',
+    'Forklift Operation',
+    'Excavator Operation',
+    'Bulldozer Operation',
+    'Backhoe Operation',
+    'Skid Steer Operation',
+    'Tower Crane Operation',
+    'Mobile Crane Operation',
+    'Demolition Specialist',
+    'Controlled Demolition',
+    'Asbestos Abatement',
+    'Lead Abatement',
+    'Mold Remediation',
+    'Scaffolding Erection',
+    'Scaffold Safety',
+    'Glass Installation',
+    'Auto Glass',
+    'Architectural Glass',
+    'Insulation Installation',
+    'Fiberglass Insulation',
+    'Spray Foam Insulation',
+    'Cellulose Insulation',
+    'Drywall Installation',
+    'Drywall Finishing',
+    'Acoustic Ceiling',
+    'Cabinet Installation',
+    'Millwork Installation',
+    'Ironworker Certification',
+    'Structural Steel',
+    'Reinforcing Steel',
+    'Ornamental Iron',
+    'Sheet Metal Worker',
+    'Ductwork Fabrication',
+    'Pipefitting',
+    'Steam Fitting',
+    'Gas Fitting',
+    'Boilermaker',
+    'Pressure Vessel',
+    'Surveying',
+    'Land Surveying',
+    'Construction Surveying',
+    'Quality Control',
+    'Quality Assurance',
+    'Project Management',
+    'Construction Management',
+    'Estimating',
+    'Blueprint Reading',
+    'AutoCAD',
+    'Revit',
+    'BIM Specialist',
+    'LEED Certification',
+    'Green Building',
+    'Energy Efficiency',
+    'Building Codes',
+    'International Building Code',
+    'National Electrical Code',
+    'Uniform Plumbing Code',
+    'Fire Safety',
+    'Building Inspector',
+    'Code Compliance',
+    'Environmental Compliance',
+    'Stormwater Management',
+    'Erosion Control',
+    'Waste Management',
+    'Recycling Specialist',
+    'Sustainable Construction',
+    'Net Zero Building',
+    'Passive House',
+    'Energy Star',
+    'WaterSense',
+    'Other'
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = certificationOptions.filter(option =>
+        option.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !formData.certifications.includes(option)
+      );
+      setFilteredCertifications(filtered);
+      setShowDropdown(true);
+    } else {
+      setFilteredCertifications([]);
+      setShowDropdown(false);
+    }
+  }, [searchTerm, formData.certifications]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleCertificationSelect = (certification) => {
+    if (!formData.certifications.includes(certification)) {
+      setFormData(prev => ({
+        ...prev,
+        certifications: [...prev.certifications, certification]
+      }));
+    }
+    setSearchTerm('');
+    setShowDropdown(false);
+  };
+
+  const handleCertificationRemove = (certificationToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter(cert => cert !== certificationToRemove)
     }));
   };
 
@@ -58,12 +268,6 @@ export default function RegisterTalent() {
         signer
       );
 
-      // Convert certifications to string[]
-      const certificationsArray = formData.certifications
-        .split(',')
-        .map(cert => cert.trim())
-        .filter(cert => cert.length > 0);
-
       const tx = await contract.registerTalent(
         formData.name,
         formData.gender,
@@ -71,7 +275,7 @@ export default function RegisterTalent() {
         formData.physicalAddress,
         formData.governmentId,
         formData.career,
-        certificationsArray
+        formData.certifications
       );
 
       await tx.wait();
@@ -104,6 +308,8 @@ export default function RegisterTalent() {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const inputBg = useColorModeValue('white', 'gray.700');
   const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
+  const dropdownBg = useColorModeValue('white', 'gray.700');
+  const dropdownBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   return (
     <Box minH="100vh">
@@ -242,15 +448,78 @@ export default function RegisterTalent() {
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel>Certifications (comma separated)</FormLabel>
-                  <Textarea
-                    name="certifications"
-                    value={formData.certifications}
-                    onChange={handleInputChange}
-                    placeholder="e.g. OSHA, PMP, LEED"
-                    bg={inputBg}
-                    borderColor={inputBorderColor}
-                  />
+                  <FormLabel>Certifications</FormLabel>
+                  <Box position="relative" ref={dropdownRef}>
+                    <InputGroup>
+                      <InputLeftElement pointerEvents="none">
+                        <SearchIcon color="gray.500" />
+                      </InputLeftElement>
+                      <Input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search and select certifications..."
+                        bg={inputBg}
+                        borderColor={inputBorderColor}
+                        _hover={{ borderColor: 'blue.400' }}
+                        _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
+                        onFocus={() => setShowDropdown(true)}
+                      />
+                    </InputGroup>
+                    
+                    {showDropdown && filteredCertifications.length > 0 && (
+                      <Box
+                        position="absolute"
+                        top="100%"
+                        left={0}
+                        right={0}
+                        bg={dropdownBg}
+                        borderWidth="1px"
+                        borderColor={dropdownBorderColor}
+                        borderRadius="md"
+                        boxShadow="lg"
+                        zIndex={10}
+                        maxH="200px"
+                        overflowY="auto"
+                      >
+                        <List spacing={0}>
+                          {filteredCertifications.map((certification) => (
+                            <ListItem
+                              key={certification}
+                              px={4}
+                              py={2}
+                              cursor="pointer"
+                              _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                              onClick={() => handleCertificationSelect(certification)}
+                            >
+                              <Text color={textColor} fontSize="sm">{certification}</Text>
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {formData.certifications.length > 0 && (
+                    <HStack spacing={2} flexWrap="wrap" mt={2}>
+                      {formData.certifications.map((certification) => (
+                        <Tag
+                          key={certification}
+                          size="md"
+                          colorScheme="green"
+                          borderRadius="full"
+                        >
+                          <TagLabel>{certification}</TagLabel>
+                          <TagCloseButton onClick={() => handleCertificationRemove(certification)} />
+                        </Tag>
+                      ))}
+                    </HStack>
+                  )}
+                  
+                  {formData.certifications.length === 0 && (
+                    <Text fontSize="sm" color="gray.500" mt={2}>
+                      Please select at least one certification.
+                    </Text>
+                  )}
                 </FormControl>
 
                 <Button
