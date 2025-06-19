@@ -60,26 +60,55 @@ const Talents = () => {
   useEffect(() => {
     const fetchTalent = async () => {
       if (!window.ethereum) {
+        console.log('MetaMask not installed');
         setIsLoading(false);
         return;
       }
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const accounts = await provider.listAccounts();
-      if (accounts.length === 0) {
-        setIsLoading(false);
-        return;
-      }
-      setAccount(accounts[0]);
-      const contract = new ethers.Contract(
-        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
-        ConstructionTalent.abi,
-        provider
-      );
+      
       try {
-        const [name, gender, birthday, physicalAddress, governmentId, career, certifications, isVerified, rating, projectCount] = await contract.getTalentInfo(accounts[0]);
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const accounts = await provider.listAccounts();
+        
+        if (accounts.length === 0) {
+          console.log('No accounts found');
+          setIsLoading(false);
+          return;
+        }
+        
+        const currentAccount = accounts[0];
+        console.log('Current account:', currentAccount);
+        setAccount(currentAccount);
+        
+        const contract = new ethers.Contract(
+          process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+          ConstructionTalent.abi,
+          provider
+        );
+        
+        console.log('Contract address:', process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
+        
+        // Try to get talent info
+        const talentInfo = await contract.getTalentInfo(currentAccount);
+        console.log('Raw talent info from contract:', talentInfo);
+        
+        const [name, gender, birthday, physicalAddress, governmentId, career, certifications, isVerified, rating, projectCount] = talentInfo;
+        
+        console.log('Parsed talent info:', {
+          name,
+          gender,
+          birthday,
+          physicalAddress,
+          governmentId,
+          career,
+          certifications,
+          isVerified,
+          rating: rating.toString(),
+          projectCount: projectCount.toString()
+        });
+        
         if (name && name.length > 0) {
           setTalent({
-            address: accounts[0],
+            address: currentAccount,
             name,
             gender,
             birthday,
@@ -91,14 +120,24 @@ const Talents = () => {
             rating: Number(rating),
             projectCount: Number(projectCount),
           });
+          console.log('Talent set successfully');
         } else {
+          console.log('No talent found for this address');
           setTalent(null);
         }
       } catch (error) {
+        console.error('Error fetching talent info:', error);
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
         setTalent(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
+    
     fetchTalent();
   }, []);
 
