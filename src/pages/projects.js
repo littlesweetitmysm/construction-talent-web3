@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -38,6 +38,8 @@ import {
   Alert,
   AlertIcon,
   Spinner,
+  List,
+  ListItem,
 } from '@chakra-ui/react';
 import { SearchIcon, AddIcon, EditIcon, CloseIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
@@ -59,10 +61,16 @@ const Projects = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [updateForm, setUpdateForm] = useState({
     additionalDescription: '',
-    additionalRequiredSkills: '',
+    additionalRequiredSkills: [],
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  
+  // Multi-select autocomplete states
+  const [skillSearchTerm, setSkillSearchTerm] = useState('');
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false);
+  const [filteredSkills, setFilteredSkills] = useState([]);
+  const dropdownRef = useRef(null);
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -71,12 +79,14 @@ const Projects = () => {
   const modalBorderColor = useColorModeValue('gray.200', 'gray.600');
   const inputBg = useColorModeValue('white', 'gray.700');
   const inputBorderColor = useColorModeValue('gray.200', 'gray.600');
+  const dropdownBg = useColorModeValue('white', 'gray.700');
+  const dropdownBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   const router = useRouter();
   const toast = useToast();
 
   // Career options for filtering
-  const careerOptions = [
+  const careerOptions = useMemo(() => [
     'Carpenter',
     'Electrician',
     'Plumber',
@@ -114,7 +124,7 @@ const Projects = () => {
     'Estimator',
     'Supervisor',
     'Other'
-  ];
+  ], []);
 
   useEffect(() => {
     checkConnection();
@@ -124,6 +134,35 @@ const Projects = () => {
   useEffect(() => {
     filterProjects();
   }, [searchTerm, filters, projects]);
+
+  // Handle skill dropdown filtering
+  useEffect(() => {
+    if (skillSearchTerm) {
+      const filtered = careerOptions.filter(option =>
+        option.toLowerCase().includes(skillSearchTerm.toLowerCase()) &&
+        !updateForm.additionalRequiredSkills.includes(option)
+      );
+      setFilteredSkills(filtered);
+      setShowSkillDropdown(true);
+    } else {
+      setFilteredSkills([]);
+      setShowSkillDropdown(false);
+    }
+  }, [skillSearchTerm, updateForm.additionalRequiredSkills, careerOptions]);
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowSkillDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const checkConnection = async () => {
     if (window.ethereum) {
@@ -150,11 +189,13 @@ const Projects = () => {
         ConstructionTalent.abi,
         provider
       );
+      
       const projectCount = await contract.projectCount();
       const projectsArray = [];
       for (let i = 1; i <= projectCount.toNumber(); i++) {
         try {
-          const [title, description, budget, client, isActive, deadline, requiredSkills] = await contract.getProjectInfo(i);
+          const [title, description, budget, client, isActive, status, deadline, requiredSkills] = await contract.getProjectInfo(i);
+          
           if (isActive) {
             projectsArray.push({
               id: i,
@@ -164,6 +205,7 @@ const Projects = () => {
               client,
               deadline: new Date(deadline.toNumber() * 1000),
               isActive,
+              status: status || 'open',
               requiredSkills: requiredSkills || [],
               // Additional fields (stored in localStorage for now)
               additionalDescription: localStorage.getItem(`project_${i}_additionalDesc`) || '',
@@ -174,6 +216,7 @@ const Projects = () => {
           // skip if project does not exist
         }
       }
+      
       setProjects(projectsArray);
       setFilteredProjects(projectsArray);
     } catch (error) {
@@ -208,11 +251,26 @@ const Projects = () => {
 
     // Budget filter
     if (filters.budget) {
-      const [min, max] = filters.budget.split('-').map(Number);
+      const budgetRange = filters.budget;
+      console.log('Budget filter applied:', budgetRange);
       filtered = filtered.filter(project => {
         const budget = Number(project.budget);
-        return budget >= min && budget <= max;
+        console.log(`Project ${project.id} budget: ${budget} ETH, filter: ${budgetRange}`);
+        
+        if (budgetRange === '50-100') {
+          // This is the "50+ ETH" option
+          const matches = budget >= 50;
+          console.log(`Project ${project.id} 50+ filter result: ${matches}`);
+          return matches;
+        } else {
+          // Handle other ranges like "0-1", "1-5", etc.
+          const [min, max] = budgetRange.split('-').map(Number);
+          const matches = budget >= min && budget <= max;
+          console.log(`Project ${project.id} range ${min}-${max} filter result: ${matches}`);
+          return matches;
+        }
       });
+      console.log('Projects after budget filter:', filtered.length);
     }
 
     setFilteredProjects(filtered);
@@ -234,12 +292,32 @@ const Projects = () => {
     }));
   };
 
+  const handleSkillSelect = (skill) => {
+    if (!updateForm.additionalRequiredSkills.includes(skill)) {
+      setUpdateForm(prev => ({
+        ...prev,
+        additionalRequiredSkills: [...prev.additionalRequiredSkills, skill]
+      }));
+    }
+    setSkillSearchTerm('');
+    setShowSkillDropdown(false);
+  };
+
+  const handleSkillRemove = (skillToRemove) => {
+    setUpdateForm(prev => ({
+      ...prev,
+      additionalRequiredSkills: prev.additionalRequiredSkills.filter(skill => skill !== skillToRemove)
+    }));
+  };
+
   const openUpdateModal = (project) => {
     setSelectedProject(project);
     setUpdateForm({
       additionalDescription: '',
-      additionalRequiredSkills: '',
+      additionalRequiredSkills: [],
     });
+    setSkillSearchTerm('');
+    setShowSkillDropdown(false);
     onOpen();
   };
 
@@ -253,7 +331,7 @@ const Projects = () => {
       const currentSkills = selectedProject.additionalRequiredSkills || '';
 
       const newDesc = currentDesc + (updateForm.additionalDescription ? '\n' + updateForm.additionalDescription : '');
-      const newSkills = currentSkills + (updateForm.additionalRequiredSkills ? ', ' + updateForm.additionalRequiredSkills : '');
+      const newSkills = currentSkills + (updateForm.additionalRequiredSkills.length > 0 ? ', ' + updateForm.additionalRequiredSkills.join(', ') : '');
 
       localStorage.setItem(`project_${selectedProject.id}_additionalDesc`, newDesc);
       localStorage.setItem(`project_${selectedProject.id}_additionalSkills`, newSkills);
@@ -268,7 +346,7 @@ const Projects = () => {
       // Reset form
       setUpdateForm({
         additionalDescription: '',
-        additionalRequiredSkills: '',
+        additionalRequiredSkills: [],
       });
 
       onClose();
@@ -434,6 +512,16 @@ const Projects = () => {
                         </Text>
                       )}
                       
+                      {/* Status Badge */}
+                      <HStack>
+                        <Badge 
+                          colorScheme={project.status === 'open' ? 'green' : project.status === 'in-progress' ? 'blue' : 'gray'} 
+                          size="sm"
+                        >
+                          {project.status}
+                        </Badge>
+                      </HStack>
+                      
                       {/* Required Skills */}
                       <Box>
                         <Text fontSize="sm" fontWeight="semibold" mb={2}>Required Skills:</Text>
@@ -546,16 +634,71 @@ const Projects = () => {
 
               <FormControl>
                 <FormLabel color={textColor}>Additional Required Skills</FormLabel>
-                <Input
-                  name="additionalRequiredSkills"
-                  value={updateForm.additionalRequiredSkills}
-                  onChange={handleUpdateFormChange}
-                  placeholder="Add more required skills (comma-separated)"
-                  bg={inputBg}
-                  borderColor={inputBorderColor}
-                  _hover={{ borderColor: 'blue.400' }}
-                  _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
-                />
+                <Box position="relative" ref={dropdownRef}>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <SearchIcon color="gray.500" />
+                    </InputLeftElement>
+                    <Input
+                      value={skillSearchTerm}
+                      onChange={(e) => setSkillSearchTerm(e.target.value)}
+                      placeholder="Search and select additional required skills..."
+                      bg={inputBg}
+                      borderColor={inputBorderColor}
+                      _hover={{ borderColor: 'blue.400' }}
+                      _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px var(--chakra-colors-blue-400)' }}
+                      onFocus={() => setShowSkillDropdown(true)}
+                    />
+                  </InputGroup>
+                  
+                  {showSkillDropdown && filteredSkills.length > 0 && (
+                    <Box
+                      position="absolute"
+                      top="100%"
+                      left={0}
+                      right={0}
+                      bg={dropdownBg}
+                      borderWidth="1px"
+                      borderColor={dropdownBorderColor}
+                      borderRadius="md"
+                      boxShadow="lg"
+                      zIndex={10}
+                      maxH="200px"
+                      overflowY="auto"
+                    >
+                      <List spacing={0}>
+                        {filteredSkills.map((skill) => (
+                          <ListItem
+                            key={skill}
+                            px={4}
+                            py={2}
+                            cursor="pointer"
+                            _hover={{ bg: useColorModeValue('gray.100', 'gray.600') }}
+                            onClick={() => handleSkillSelect(skill)}
+                          >
+                            <Text color={textColor}>{skill}</Text>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
+                </Box>
+
+                {updateForm.additionalRequiredSkills.length > 0 && (
+                  <HStack spacing={2} flexWrap="wrap" mt={2}>
+                    {updateForm.additionalRequiredSkills.map((skill) => (
+                      <Tag
+                        key={skill}
+                        size="md"
+                        colorScheme="blue"
+                        borderRadius="full"
+                      >
+                        <TagLabel>{skill}</TagLabel>
+                        <TagCloseButton onClick={() => handleSkillRemove(skill)} />
+                      </Tag>
+                    ))}
+                  </HStack>
+                )}
               </FormControl>
             </VStack>
           </ModalBody>

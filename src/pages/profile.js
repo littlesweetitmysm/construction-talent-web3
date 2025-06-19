@@ -3,43 +3,39 @@ import {
   Box,
   Container,
   Heading,
-  Text,
-  Button,
   VStack,
   HStack,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  useToast,
-  Avatar,
+  Text,
   Badge,
-  Divider,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
+  useColorModeValue,
+  Avatar,
+  Button,
+  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalCloseButton,
-  useDisclosure,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
   Select,
+  useToast,
+  Divider,
+  SimpleGrid,
   Card,
   CardBody,
   Stack,
-  useColorModeValue,
+  Spinner,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
+import { EditIcon } from '@chakra-ui/icons';
 import Navigation from '../components/Navigation';
-import { getTalentInfo } from '../utils/contract';
 import { ethers } from 'ethers';
 import ConstructionTalent from '../contracts/ConstructionTalent.json';
-import { EditIcon, AddIcon } from '@chakra-ui/icons';
 
 const Profile = () => {
   const [talent, setTalent] = useState(null);
@@ -48,8 +44,6 @@ const Profile = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  const router = useRouter();
-  const { address } = router.query;
 
   const [updateForm, setUpdateForm] = useState({
     additionalSkills: '',
@@ -64,24 +58,8 @@ const Profile = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
-    checkConnection();
-    if (address) {
-      fetchTalentProfile();
-    }
-  }, [address]);
-
-  const checkConnection = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-        }
-      } catch (error) {
-        console.error('Error checking connection:', error);
-      }
-    }
-  };
+    fetchTalentProfile();
+  }, []);
 
   const fetchTalentProfile = async () => {
     if (!window.ethereum) {
@@ -216,7 +194,10 @@ const Profile = () => {
       <Box minH="100vh">
         <Navigation />
         <Container maxW="container.md" pt={20} pb={10}>
-          <Text>Loading profile...</Text>
+          <VStack spacing={8} align="center">
+            <Spinner size="xl" />
+            <Text>Loading profile...</Text>
+          </VStack>
         </Container>
       </Box>
     );
@@ -227,7 +208,10 @@ const Profile = () => {
       <Box minH="100vh">
         <Navigation />
         <Container maxW="container.md" pt={20} pb={10}>
-          <Text>Please connect your wallet to view your profile.</Text>
+          <Alert status="warning">
+            <AlertIcon />
+            Please connect your wallet to view your profile.
+          </Alert>
         </Container>
       </Box>
     );
@@ -239,7 +223,10 @@ const Profile = () => {
         <Navigation />
         <Container maxW="container.md" pt={20} pb={10}>
           <VStack spacing={6}>
-            <Text>No talent profile found for this wallet.</Text>
+            <Alert status="info">
+              <AlertIcon />
+              No talent profile found for this wallet.
+            </Alert>
             <Button colorScheme="blue" onClick={() => window.location.href = '/register-talent'}>
               Register as Talent
             </Button>

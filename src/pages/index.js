@@ -52,16 +52,9 @@ export default function Home() {
   };
 
   const disconnectWallet = () => {
-    try {
-      setAccount('');
-      setIsConnected(false);
-      localStorage.removeItem('walletConnected');
-      
-      // Note: MetaMask doesn't have a disconnect method, but we clear our connection state
-      // The user would need to manually disconnect from MetaMask if they want to completely disconnect
-    } catch (error) {
-      console.error('Error disconnecting wallet:', error);
-    }
+    setAccount('');
+    setIsConnected(false);
+    localStorage.removeItem('walletConnected');
   };
 
   useEffect(() => {

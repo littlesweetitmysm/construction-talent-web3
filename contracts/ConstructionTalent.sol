@@ -24,6 +24,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
         uint256 budget;
         address client;
         bool isActive;
+        string status;
         string[] requiredSkills;
         uint256 deadline;
     }
@@ -36,6 +37,7 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
     event ProjectCreated(uint256 indexed projectId, string title);
     event TalentVerified(address indexed talent);
     event ProjectAssigned(uint256 indexed projectId, address indexed talent);
+    event ProjectClosed(uint256 indexed projectId, address indexed client);
 
     constructor() {}
 
@@ -90,11 +92,20 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
             budget: _budget,
             client: msg.sender,
             isActive: true,
+            status: "open",
             requiredSkills: _requiredSkills,
             deadline: _deadline
         });
 
         emit ProjectCreated(currentProjectId, _title);
+    }
+
+    function closeProject(uint256 _projectId) external {
+        require(projects[_projectId].isActive, "Project is not active");
+        require(projects[_projectId].client == msg.sender, "Only project client can close project");
+        
+        projects[_projectId].isActive = false;
+        emit ProjectClosed(_projectId, msg.sender);
     }
 
     function verifyTalent(address _talent) external onlyOwner {
@@ -147,7 +158,9 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
         uint256 budget,
         address client,
         bool isActive,
-        uint256 deadline_
+        string memory status,
+        uint256 deadline,
+        string[] memory requiredSkills
     ) {
         Project storage project = projects[_projectId];
         return (
@@ -156,7 +169,9 @@ contract ConstructionTalent is Ownable, ReentrancyGuard {
             project.budget,
             project.client,
             project.isActive,
-            project.deadline
+            project.status,
+            project.deadline,
+            project.requiredSkills
         );
     }
 } 

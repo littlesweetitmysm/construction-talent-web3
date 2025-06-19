@@ -8,7 +8,7 @@ if (!fs.existsSync(contractsDir)) {
 }
 
 // Read the contract ABI from artifacts
-const contractPath = path.join(__dirname, '../artifacts/contracts/ConstructionTalent.sol/ConstructionTalent.json');
+const contractPath = path.join(__dirname, '../src/artifacts/contracts/ConstructionTalent.sol/ConstructionTalent.json');
 const contractData = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
 
 // Create the ABI file
