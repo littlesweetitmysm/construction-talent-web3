@@ -39,6 +39,77 @@ const ProjectCreation = ({ signer }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!title.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Project title is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!description.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Project description is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!budget || parseFloat(budget) <= 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter a valid budget greater than 0.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!deadline) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a project deadline.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Check if deadline is in the future
+    const deadlineDate = new Date(deadline);
+    const currentDate = new Date();
+    if (deadlineDate <= currentDate) {
+      toast({
+        title: 'Validation Error',
+        description: 'Deadline must be in the future.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!requiredSkills || requiredSkills.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select at least one required skill.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -73,6 +144,23 @@ const ProjectCreation = ({ signer }) => {
   const handleSkillChange = (e) => {
     const selectedSkills = Array.from(e.target.selectedOptions, option => option.value);
     setRequiredSkills(selectedSkills);
+  };
+
+  // Validation function to check if form is complete
+  const isFormValid = () => {
+    const titleValid = title.trim() !== '';
+    const descriptionValid = description.trim() !== '';
+    const budgetValid = budget && parseFloat(budget) > 0;
+    
+    // Check if deadline is not earlier than today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    const deadlineDate = deadline ? new Date(deadline) : null;
+    const deadlineValid = deadline && deadlineDate >= today;
+    
+    const skillsValid = requiredSkills.length > 0;
+
+    return titleValid && descriptionValid && budgetValid && deadlineValid && skillsValid;
   };
 
   return (
@@ -144,6 +232,7 @@ const ProjectCreation = ({ signer }) => {
           width="full"
           isLoading={isLoading}
           loadingText="Creating Project..."
+          isDisabled={!isFormValid()}
         >
           Create Project
         </Button>

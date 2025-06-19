@@ -135,8 +135,100 @@ export default function RegisterTalent() {
     }));
   };
 
+  // Validation function to check if form is complete
+  const isFormValid = () => {
+    const nameValid = formData.name.trim() !== '';
+    const genderValid = formData.gender !== '';
+    const birthdayValid = formData.birthday !== '';
+    const addressValid = formData.physicalAddress.trim() !== '';
+    const idValid = formData.governmentId.trim() !== '';
+    const careerValid = formData.career !== '';
+    const certificationsValid = formData.certifications.length > 0;
+
+    return nameValid && genderValid && birthdayValid && addressValid && idValid && careerValid && certificationsValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.name.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Full name is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.gender) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select your gender.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.birthday) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select your date of birth.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.physicalAddress.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Physical address is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.governmentId.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Government ID is required.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.career) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select your career/profession.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (formData.certifications.length === 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select at least one certification.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -413,6 +505,7 @@ export default function RegisterTalent() {
                   w="full"
                   isLoading={isLoading}
                   loadingText="Registering..."
+                  isDisabled={!isFormValid()}
                   bg={useColorModeValue('blue.600', 'blue.400')}
                   color="white"
                   _hover={{
