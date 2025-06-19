@@ -32,6 +32,7 @@ import {
   Card,
   CardBody,
   Stack,
+  useColorModeValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import Navigation from '../components/Navigation';
