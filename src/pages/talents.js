@@ -47,6 +47,7 @@ const Talents = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTalent, setSelectedTalent] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [account, setAccount] = useState('');
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
@@ -57,7 +58,48 @@ const Talents = () => {
   const router = useRouter();
 
   useEffect(() => {
-    fetchTalents();
+    const fetchTalent = async () => {
+      if (!window.ethereum) {
+        setIsLoading(false);
+        return;
+      }
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+      setAccount(accounts[0]);
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
+        ConstructionTalent.abi,
+        provider
+      );
+      try {
+        const [name, gender, birthday, physicalAddress, governmentId, career, certifications, isVerified, rating, projectCount] = await contract.getTalentInfo(accounts[0]);
+        if (name && name.length > 0) {
+          setTalent({
+            address: accounts[0],
+            name,
+            gender,
+            birthday,
+            physicalAddress,
+            governmentId,
+            career,
+            certifications,
+            isVerified,
+            rating: Number(rating),
+            projectCount: Number(projectCount),
+          });
+        } else {
+          setTalent(null);
+        }
+      } catch (error) {
+        setTalent(null);
+      }
+      setIsLoading(false);
+    };
+    fetchTalent();
   }, []);
 
   useEffect(() => {
