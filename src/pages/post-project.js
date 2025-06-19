@@ -169,15 +169,14 @@ const PostProject = () => {
     const skillsValid = project.requiredSkills.length > 0;
 
     // Debug logging
-    console.log('Validation check:', {
+    console.log('Post Project Validation:', {
       title: titleValid,
       description: descriptionValid,
       budget: budgetValid,
       deadline: deadlineValid,
       skills: skillsValid,
-      project: project,
-      today: today,
-      deadlineDate: deadlineDate
+      requiredSkillsArray: project.requiredSkills,
+      requiredSkillsLength: project.requiredSkills.length
     });
 
     return titleValid && descriptionValid && budgetValid && deadlineValid && skillsValid;
@@ -378,7 +377,7 @@ const PostProject = () => {
                   />
                 </FormControl>
 
-                <FormControl isRequired>
+                <FormControl>
                   <FormLabel color={textColor}>Required Skills</FormLabel>
                   <Box position="relative" ref={dropdownRef}>
                     <InputGroup>

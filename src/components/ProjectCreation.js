@@ -160,6 +160,17 @@ const ProjectCreation = ({ signer }) => {
     
     const skillsValid = requiredSkills.length > 0;
 
+    // Debug logging
+    console.log('Project Creation Validation:', {
+      title: titleValid,
+      description: descriptionValid,
+      budget: budgetValid,
+      deadline: deadlineValid,
+      skills: skillsValid,
+      requiredSkillsArray: requiredSkills,
+      requiredSkillsLength: requiredSkills.length
+    });
+
     return titleValid && descriptionValid && budgetValid && deadlineValid && skillsValid;
   };
 

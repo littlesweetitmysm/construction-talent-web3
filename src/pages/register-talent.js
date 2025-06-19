@@ -145,6 +145,19 @@ export default function RegisterTalent() {
     const careerValid = formData.career !== '';
     const certificationsValid = formData.certifications.length > 0;
 
+    // Debug logging
+    console.log('Register Talent Validation:', {
+      name: nameValid,
+      gender: genderValid,
+      birthday: birthdayValid,
+      address: addressValid,
+      id: idValid,
+      career: careerValid,
+      certifications: certificationsValid,
+      certificationsArray: formData.certifications,
+      certificationsLength: formData.certifications.length
+    });
+
     return nameValid && genderValid && birthdayValid && addressValid && idValid && careerValid && certificationsValid;
   };
 
@@ -423,7 +436,7 @@ export default function RegisterTalent() {
                   </Select>
                 </FormControl>
 
-                <FormControl isRequired>
+                <FormControl>
                   <FormLabel>Certifications</FormLabel>
                   <Box position="relative" ref={dropdownRef}>
                     <InputGroup>

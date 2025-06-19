@@ -28,6 +28,8 @@ const TalentRegistration = ({ provider, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Debug logging
+    console.log('TalentRegistration Submit:', formData);
     setLoading(true);
 
     try {
